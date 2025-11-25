@@ -4,13 +4,13 @@
  */
 const DEFAULT_GRADE_CUTOFF = {
     'A+': 95,
-    'A': 90,
+    'A0': 90,
     'B+': 85,
-    'B': 80,
+    'B0': 80,
     'C+': 75,
-    'C': 70,
+    'C0': 70,
     'D+': 65,
-    'D': 60,
+    'D0': 60,
     'P': 70,
 };
 
@@ -34,4 +34,5 @@ const DEFAULT_PERCENT_CUTOFF = {
  */
 const DEFAULT_SCORE_COLUMN_KEY = 'FINAL_SCORE';
 const DEFAULT_GRADE_COLUMN_KEY = 'FINAL_GRADE';
+
 
