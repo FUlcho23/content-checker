@@ -9,8 +9,8 @@ const nullColumn = document.getElementById("nullColumn");
 const checkBtn = document.getElementById("checkBtn");
 const resultTableHead = document.querySelector("#resultTable thead tr");
 const resultTableBody = document.querySelector("#resultTable tbody");
-const toggleGradeSettingsBtn = document.getElementById("toggleGradeSettingsBtn");
-const gradeCutSettings = document.getElementById("grade-cut-settings");
+const toggleDistributionBtn = document.getElementById('toggleDistributionBtn');//토글
+const distributionDetailContainer = document.getElementById('gradeDistributionDetail');//토글상세
 const fileInput = document.getElementById("fileInput"); // 파일
 const loadDataBtn = document.getElementById("loadDataBtn"); // 관련
 const fileNameDisplay = document.getElementById("fileNameDisplay"); // 추가
@@ -20,18 +20,20 @@ const EXPECTED_GRADE_COLUMN = 'EXPECTED_GRADE_TEMP';
 const errorToggle = document.getElementById("errorToggle"); //오류 행만 보기 토글
 let isErrorFilterOn = false; //오류 행만 보기 꺼짐 상태
 let targetSubjectKey = SUBJECT_COLUMN_KEY;
+let targetGradeKey = DEFAULT_GRADE_COLUMN_KEY;
+let targetScoreKey = DEFAULT_SCORE_COLUMN_KEY;
 let currentFilteredRows = []; // 현재 선택된 과목에 따라 필터링된 데이터
 let currentSortColumn = null; // 현재 정렬 기준 컬럼명
 let currentSortDirection = 'asc'; // 'asc' (오름차순) 또는 'desc' (내림차순)
 let errorRowsToExport = []; // 오류 데이터를 담을 배열
 // 등급 커트라인 기본값 (A+ 기준은 95, 나머지는 경계점)
 let gradeCutoff = DEFAULT_GRADE_CUTOFF;
+const gradePercentCutoff = DEFAULT_PERCENT_CUTOFF;
+const gradeCutSettings = document.getElementById("gradeCutSettings"); // 👈 이 부분을 추가해야 합니다.
 let allRows = []; // 전체 데이터를 담을 배열 (수업 데이터를 대체)
 let uniqueSubjects = []; // 과목 목록을 담을 배열
 // 스크립트 로드 시 자동 실행
-renderGradeSettingsUI();
-// 첫 로딩 시 자동 트리거
-renderGradeSettingsUI();//등급 설정 랜더링
+renderGradePercentUI();
 // -----------------------------
 // 선택한 과목 → 컬럼 목록 갱신 및 데이터 필터링
 // -----------------------------
@@ -50,64 +52,78 @@ subjectSelect.addEventListener("change", () => {
     }
 });
 // -----------------------------
-// 등급 설정 UI 생성 함수 
+// 등급 비율 설정 UI 생성 함수
 // -----------------------------
-function renderGradeSettingsUI() {
-    gradeCutSettings.innerHTML = "<h4>⬇️ 등급별 최소 점수 설정</h4>";
-    const grades = ['A+', 'A', 'B+', 'B', 'C+', 'C', 'D+', 'D', 'P'];
-    grades.forEach(grade => {
+function renderGradePercentUI() {
+    /// ⚠️ 경고: gradeCutSettings가 null인지 항상 확인해야 합니다.
+    if (!gradeCutSettings) {
+        console.error("등급 비율 설정 컨테이너(ID: gradeCutSettings)를 찾을 수 없습니다. HTML을 확인하세요.");
+        return;
+    }
+    
+    // UI를 생성하기 전에 기존 내용을 비웁니다.
+    gradeCutSettings.innerHTML = "<h4>⬇️ 현재 등급별 목표 비율 (%)</h4>";
+    
+    // 비율을 설정할 등급 그룹 정의 (기존과 동일)
+    const percentGrades = [
+        { key: 'A', label: 'A+/A' },
+        { key: 'B', label: 'B+/B' }
+    ];
+
+    percentGrades.forEach(gradeGroup => {
         const inputGroup = document.createElement("div");
-        inputGroup.className = "grade-input-group";
+        inputGroup.className = "grade-input-group grade-percent-group";
         
-        // 라벨 (등급)
+        // 라벨 (등급 그룹 이름)
         const label = document.createElement("label");
-        label.textContent = `등급 : ${grade}`;
+        label.textContent = `${gradeGroup.label} 목표 비율: `;
+        label.style.fontWeight = 'bold'; // 라벨 강조
 
-        // 입력 필드 (점수)
-        const input = document.createElement("input");
-        input.type = "number";
-        input.min = "0";
-        input.max = "100";
-        input.value = gradeCutoff[grade];
-        input.dataset.grade = grade; // 어떤 등급의 커트라인인지 저장
+        // 텍스트 출력 필드 (값)
+        const valueSpan = document.createElement("span");
+        
+        // 전역 객체 gradePercentCutoff에서 현재 저장된 값을 가져와서 표시
+        const currentValue = gradePercentCutoff[gradeGroup.key] || 0;
+        valueSpan.textContent = currentValue; 
+        
+        // % 표시
+        const percentUnit = document.createElement("span");
+        percentUnit.textContent = "%";
+        percentUnit.style.marginLeft = '3px';
 
-        // 입력 이벤트 리스너: 값이 변경될 때마다 전역 객체에 저장
-        input.addEventListener('change', (e) => {
-            const newScore = Number(e.target.value);
-
-            // 입력 필드가 비어있으면 0으로 처리하여 비활성화 기능 지원
-            if (e.target.value === "") {
-                gradeCutoff[grade] = 0; 
-            } else if (newScore >= 0 && newScore <= 100) {
-                gradeCutoff[grade] = newScore;
-            } else {
-                e.target.value = gradeCutoff[grade] || 0; // 유효하지 않으면 원래 값으로 되돌림
-            }
-        });
+        // ⭐ 입력 이벤트 리스너 및 input 생성 로직 삭제 ⭐
 
         inputGroup.appendChild(label);
-        inputGroup.appendChild(input);
+        inputGroup.appendChild(valueSpan); // ⭐ input 대신 span 추가
+        inputGroup.appendChild(percentUnit);
         gradeCutSettings.appendChild(inputGroup);
     });
 }
 // -----------------------------
-// 토글 버튼 이벤트 리스너 
+// 성적 분포 상세 결과 토글 리스너
 // -----------------------------
-toggleGradeSettingsBtn.addEventListener('click', () => {
+if (toggleDistributionBtn && gradeDistributionDetail) {
+    toggleDistributionBtn.addEventListener('click', () => {
+        // ⭐ 1. 숨김 상태 확인
+        const isHidden = gradeDistributionDetail.style.display === 'none';
+        
+        // ⭐ 2. 상세 결과 컨테이너 표시/숨김 토글
+        gradeDistributionDetail.style.display = isHidden ? 'block' : 'none';
 
-    const isHidden = gradeCutSettings.style.display === 'none';
-    gradeCutSettings.style.display = isHidden ? 'block' : 'none';
-
-    // 버튼의 화살표 방향 변경
-    const icon = document.getElementById("toggleIcon");
-    if (isHidden) {
-        icon.textContent = '▲';
-        toggleGradeSettingsBtn.classList.add('toggled');
-    } else {
-        icon.textContent = '▼';
-        toggleGradeSettingsBtn.classList.remove('toggled');
-    }
-});
+        // 3. 버튼의 화살표 방향 변경
+        const icon = document.getElementById("distributionToggleIcon");
+        
+        if (icon) {
+            if (isHidden) {
+                icon.textContent = '▲';
+                toggleDistributionBtn.classList.add('toggled');
+            } else {
+                icon.textContent = '▼';
+                toggleDistributionBtn.classList.remove('toggled');
+            }
+        }
+    });
+}
 // -----------------------------
 // 검증 실행
 // -----------------------------
@@ -150,20 +166,22 @@ checkBtn.addEventListener("click", () => {
 
     resultTableBody.innerHTML = "";
 
-    // --- 2. 헤더에 클릭 이벤트 리스너 연결 ---
-//    resultTableHead.querySelectorAll('th').forEach(th => {
-//        const columnName = th.dataset.column;
-//        th.style.cursor = 'pointer';
-//        th.addEventListener('click', () => handleHeaderClick(columnName));
-//    });
-
     // --- 3. 오류 내보내기 배열 초기화 ---
     errorRowsToExport = [];
+    
+    // ⭐ 등급별 카운터 초기화: A0/B0 등을 별도로 카운트합니다.
+    const gradeCounts = {
+        'A+': 0, 'A0': 0, 'B+': 0, 'B0': 0, 
+        'C+': 0, 'C0': 0, 'D+': 0, 'D0': 0, 
+        'F': 0, 'P': 0, 'NP': 0, 
+        '기타': 0,
+        '점수 오류/누락': 0 // 점수 오류도 통계에 포함되도록 추가
+    }; 
 
     // --- 4. 데이터 검증 루프 ---
     rows.forEach(row => {
-        let isError = false;              // 오류 여부
-        row[EXPECTED_GRADE_COLUMN] = '';  // 예상 등급 초기화
+        let isError = false;
+        row[EXPECTED_GRADE_COLUMN] = '';
 
         // ----- ① 점수 → 등급 검증 -----
         if (checkType.value === "gradeCheck") {
@@ -174,19 +192,31 @@ checkBtn.addEventListener("click", () => {
             const grade = String(row[gradeCol]).toUpperCase();
 
             // 점수가 없는 경우
-            const isScoreInvalid = (isNaN(score) || row[scoreCol] === null);
+            const isScoreInvalid = (isNaN(score) || row[scoreCol] === null || row[scoreCol] === "");
 
             // 1: 점수 오류/누락
             if (isScoreInvalid) {
                 isError = true;
                 row[EXPECTED_GRADE_COLUMN] = '점수 오류/누락';
+                
+                // ⭐ 등급 카운트 (점수 오류)
+                gradeCounts['점수 오류/누락']++;
             } else {
+                
+                // ⭐ 등급 카운트 (정상 데이터)
+                let originalGrade = grade;
+                if (gradeCounts.hasOwnProperty(originalGrade)) {
+                    gradeCounts[originalGrade]++;
+                } else if (originalGrade) {
+                    // 원본 등급이 예상치 못한 값일 경우
+                    gradeCounts['기타']++;
+                }
 
-                // P/NP 체계인지 확인
+                // P/NP 체계인지 확인 (기존 로직 유지)
                 const isPassFailScheme = (grade === 'P' || grade === 'NP');
 
                 if (isPassFailScheme) {
-                    // --- 2-1. P/NP 체계 ---
+                    // --- 2-1. P/NP 체계 --- (기존 로직 유지)
                     const cutoffP = gradeCutoff['P'] || 0;
                     let expectedGrade_PNP = (score >= cutoffP) ? "P" : "NP";
 
@@ -197,21 +227,22 @@ checkBtn.addEventListener("click", () => {
                     }
 
                 } else {
-                    // --- 2-2. A+~F 체계 ---
+                    // --- 2-2. A+~F 체계 --- (기존 로직 유지)
                     const gradeLevels = [
-                        { grade: "A+", cutoff: gradeCutoff['A+'] },
-                        { grade: "A",  cutoff: gradeCutoff['A'] },
-                        { grade: "B+", cutoff: gradeCutoff['B+'] },
-                        { grade: "B",  cutoff: gradeCutoff['B'] },
-                        { grade: "C+", cutoff: gradeCutoff['C+'] },
-                        { grade: "C",  cutoff: gradeCutoff['C'] },
-                        { grade: "D+", cutoff: gradeCutoff['D+'] },
-                        { grade: "D",  cutoff: gradeCutoff['D'] }
+                        { grade: "A+", cutoff: gradeCutoff['A+'] || 0 }, // cutoff 값 없으면 0 처리
+                        { grade: "A0",  cutoff: gradeCutoff['A0'] || 0 },
+                        { grade: "B+", cutoff: gradeCutoff['B+'] || 0 },
+                        { grade: "B0",  cutoff: gradeCutoff['B0'] || 0 },
+                        { grade: "C+", cutoff: gradeCutoff['C+'] || 0 },
+                        { grade: "C0",  cutoff: gradeCutoff['C0'] || 0 },
+                        { grade: "D+", cutoff: gradeCutoff['D+'] || 0 },
+                        { grade: "D0",  cutoff: gradeCutoff['D0'] || 0 }
                     ];
 
                     let expectedGrade = "F";
 
                     for (const level of gradeLevels) {
+                        // gradeCutoff에 값이 없으면 0으로 처리하여 D0 아래는 F가 되도록 보장
                         if (level.cutoff > 0 && score >= level.cutoff) {
                             expectedGrade = level.grade;
                             break;
@@ -225,8 +256,7 @@ checkBtn.addEventListener("click", () => {
                     }
                 }
             }
-        }
-
+        } 
         // ----- ② NULL / 빈값 검증 -----
         if (checkType.value === "notNull") {
             const col = nullColumn.value;
@@ -246,14 +276,20 @@ checkBtn.addEventListener("click", () => {
     // 요약 통계 업데이트
     updateSummaryPanel(rows.length, errorRowsToExport.length);
 
-    // --- 5. 검증 후 결과 테이블 렌더링 ---
+    // ⭐ 5. 등급 분포율 계산 및 렌더링
+    const totalStudents = rows.length;
+    
+    // 카운트가 0인 항목 및 '점수 오류/누락' 항목을 포함한 최종 분포를 계산
+    const finalDistribution = calculateDistribution(gradeCounts, totalStudents);
+    renderGradeDistributionTextUI(finalDistribution, totalStudents); // 학생 수 전달
+
+    // --- 6. 검증 후 결과 테이블 렌더링 ---
     if (selectedColumns.length > 0 && !currentSortColumn) {
         currentSortColumn = selectedColumns[0];
         currentSortDirection = 'asc';
     }
 
     renderResultTable(rows, selectedColumns, checkType.value);
-
 });
 // -----------------------------
 // 데이터 로드 버튼 이벤트 리스너 
@@ -456,19 +492,14 @@ function renderColumnsOnce() {
         nullColumn.innerHTML = "";
         return; 
     }
-    // 첫 행에서 모든 컬럼 목록 추출
-    const firstRow = allRows[0]; 
+    // ⭐ 1. allRows[0]에서 모든 컬럼 목록 추출 (headers)
+    const allColumns = Object.keys(allRows[0]); 
 
-    // 표시 컬럼 체크박스 초기화
+    // 표시 컬럼 체크박스 초기화 (기존 로직 유지)
     displayColumns.innerHTML = "";
 
-    // 오류 조건 select 초기화
-    scoreColumn.innerHTML = "";
-    gradeColumn.innerHTML = "";
-    nullColumn.innerHTML = "";
-
-    for (const col in firstRow) {
-        // ----- 표시용 체크박스 -----
+    // 2. 표시용 컬럼 체크박스 렌더링 (기존 로직 유지)
+    allColumns.forEach(col => {
         const label = document.createElement("label");
         label.style.display = "block";
 
@@ -482,19 +513,24 @@ function renderColumnsOnce() {
         label.appendChild(checkbox);
         label.append(" " + col);
         displayColumns.appendChild(label);
+    });
 
-        // ----- 점수/등급/널 검증용 옵션 -----
-        const opt1 = document.createElement("option");
-        opt1.value = col;
-        opt1.textContent = col;
+    // ----------------------------------------------------------------
+    // ⭐ 3. 점수/등급/Null 컬럼 선택 <select> 렌더링 (renderColumnSelect 사용) ⭐
+    // ----------------------------------------------------------------
+    
+    // 점수 컬럼 선택 드롭다운 렌더링 (디폴트값 적용)
+    // 'scoreColumn'은 DOM 변수 이름이므로 ID는 'scoreColumnSelect'로 가정합니다. 
+    // HTML ID가 'scoreColumn'이라면 ID도 'scoreColumn'으로 변경해 주세요.
+    renderColumnSelect('scoreColumn', allColumns, targetScoreKey); 
+    
+    // 등급 컬럼 선택 드롭다운 렌더링 (디폴트값 적용)
+    // 'gradeColumn'은 DOM 변수 이름이므로 ID는 'gradeColumnSelect'로 가정합니다. 
+    // HTML ID가 'gradeColumn'이라면 ID도 'gradeColumn'으로 변경해 주세요.
+    renderColumnSelect('gradeColumn', allColumns, targetGradeKey);
 
-        const opt2 = opt1.cloneNode(true);
-        const opt3 = opt1.cloneNode(true);
-
-        scoreColumn.appendChild(opt1);
-        gradeColumn.appendChild(opt2);
-        nullColumn.appendChild(opt3);
-    }
+    // Null 검증 컬럼 선택 드롭다운 렌더링 (디폴트 값 없음)
+    renderColumnSelect('nullColumn', allColumns, '');
 }
 // -----------------------------
 // 정렬된 결과 테이블 다시 그리기 함수 (수정됨)
@@ -639,7 +675,7 @@ function updateSummaryPanel(totalRows, errorRows) {
     }
 }
 // -----------------------------
-// script.js (토글 로직 추가)
+// 토글 로직 추가
 // -----------------------------
 errorToggle.addEventListener("change", () => {
     // 1. 상태 변수 업데이트
@@ -653,14 +689,6 @@ errorToggle.addEventListener("change", () => {
 
     // 3. 테이블 다시 렌더링
     renderResultTable(currentFilteredRows, selectedColumns, currentCheckType); // 인수를 모두 전달
-
-    // 4. 정렬 표시
-    if (currentSortColumn) {
-        const initialHeader = resultTableHead.querySelector(`th[data-column="${currentSortColumn}"]`);
-        if (initialHeader) {
-            initialHeader.textContent += (currentSortDirection === 'asc' ? ' ▲' : ' ▼');
-        }
-    }
 });
 // -----------------------------
 // 초기화: 테이블 헤더 클릭 이벤트 위임 설정 (딱 1회 실행)
@@ -679,3 +707,91 @@ resultTableHead.addEventListener('click', (event) => {
         handleHeaderClick(columnName);
     }
 });
+/**
+ * 등급 카운트를 비율(%)로 변환하는 함수
+ */
+function calculateDistribution(counts, total) {
+    const distribution = {};
+    if (total === 0) return distribution;
+
+    // 카운트가 0인 항목을 포함하여 모든 항목의 비율을 계산
+    for (const grade in counts) {
+        distribution[grade] = (counts[grade] / total) * 100;
+    }
+    return distribution;
+}
+/**
+ * 텍스트 기반 등급 분포 UI 렌더링 함수
+ * @param {Object<string, number>} gradeDistributionData - 등급별 비율 데이터 (예: {'A+': 10.5, ...})
+ * @param {number} totalStudents - 전체 학생 수
+ */
+function renderGradeDistributionTextUI(gradeDistributionData, totalStudents) {
+    // gradeDistributionDetail는 상세 분포를 보여줄 HTML 요소의 ID여야 합니다.
+    const detailContainer = document.getElementById('gradeDistributionDetail');
+    if (!detailContainer) {
+        console.error("ID가 'gradeDistributionDetail'인 요소를 찾을 수 없습니다.");
+        return;
+    }
+
+    detailContainer.innerHTML = "<h4>📋 원본 데이터의 등급 분포 상세 (%)</h4>";
+
+    // 등급 순서 정의 (A0, B0 등은 따로 표시하는 것이 일반적)
+    const displayOrder = [
+        'A+', 'A0', 'B+', 'B0', 'C+', 'C0', 'D+', 'D0', 
+        'F', 'P', 'NP', '점수 오류/누락', '기타'
+    ];
+
+    // 정의된 순서대로 비율이 0% 초과인 등급만 표시
+    displayOrder.forEach(grade => {
+        const percentage = gradeDistributionData[grade];
+        if (percentage !== undefined && percentage > 0) {
+            const distributionItem = document.createElement("div");
+            distributionItem.className = "grade-distribution-text-item";
+            
+            // toFixed(1)로 소수점 첫째 자리까지 표시
+            distributionItem.innerHTML = `${grade} 등급: ${percentage.toFixed(1)}%`; 
+            detailContainer.appendChild(distributionItem);
+        }
+    });
+    
+    // --- 총합 비율 표시 ---
+    const totalPercentage = Object.values(gradeDistributionData).reduce((sum, current) => sum + current, 0);
+
+    const totalLine = document.createElement("p");
+    totalLine.className = "grade-distribution-total";
+    totalLine.style.fontWeight = 'bold';
+    totalLine.style.marginTop = '10px';
+    totalLine.innerHTML = `전체 학생 수: ${totalStudents}명 (총합 비율: ${totalPercentage.toFixed(1)}%)`;
+
+    detailContainer.appendChild(totalLine);
+}
+// ------------------------------------------------
+// 컬럼 선택 드롭다운 UI 생성 및 기본값 설정 함수
+// ------------------------------------------------
+function renderColumnSelect(id, columns, defaultValue) {
+    // 1. 해당 ID의 <select> 요소를 가져옵니다.
+    const selectElement = document.getElementById(id);
+    if (!selectElement) return; // 요소가 없으면 종료
+    
+    selectElement.innerHTML = ''; // 기존 옵션 비우기
+
+    // 기본 "선택 안 함" 옵션 추가
+    const defaultOption = document.createElement('option');
+    defaultOption.value = '';
+    defaultOption.textContent = `-- 컬럼 선택 --`;
+    selectElement.appendChild(defaultOption);
+
+    // 2. CSV 헤더 목록(columns)을 순회하며 옵션을 생성합니다.
+    columns.forEach(colName => {
+        const option = document.createElement('option');
+        option.value = colName;
+        option.textContent = colName;
+        
+        // ⭐ 3. 기본값 설정 로직: 컬럼 이름이 기본값과 일치하면 선택된 상태로 만듭니다.
+        if (colName === defaultValue) {
+            option.selected = true;
+        }
+
+        selectElement.appendChild(option);
+    });
+}
