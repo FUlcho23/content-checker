@@ -1,32 +1,34 @@
-/* 기본 스타일 */
+/* ================================
+   기본 설정 / 공통 색상
+================================ */
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #f8f9fa; /* 배경색: 더 밝고 부드러운 회색 */
-    color: #333; /* 기본 텍스트 색상: 검정 계열 */
+    background-color: #f8f9fa;
+    color: #333;
     padding: 20px;
     margin: 0;
 }
 
-/* 주 강조색 설정 (부드러운 파랑) */
 :root {
-    --primary-color: #4a90e2; /* 기존 쨍한 파랑 대신 차분한 파랑 */
-    --primary-light: #e0f2ff; /* 밝은 배경/호버용 */
-    --success-color: #38c172; /* 검증 버튼 색상 */
-    
-    /* ⭐⭐ 수정: 오류 색상 채도/밝기 낮춤 (기존 #e3342f에서 #d9534f 계열로 변경) ⭐⭐ */
-    --error-color: #d9534f; 
+    --primary-color: #4a90e2;
+    --primary-light: #e0f2ff;
+    --success-color: #38c172;
+    --error-color: #d9534f;
 }
 
+/* ================================
+   제목 스타일
+================================ */
 h1 {
-    color: var(--primary-color); /* 제목 색상 변경 */
+    color: var(--primary-color);
     border-bottom: 2px solid #e9ecef;
     padding-bottom: 10px;
     margin-bottom: 20px;
 }
 
-/* ------------------ 레이아웃 컨트롤 영역 ------------------ */
-
-/* 상단 컨트롤 영역 (테이블 선택, 버튼) */
+/* ================================
+   상단 컨트롤 영역
+================================ */
 #top-controls {
     display: flex;
     align-items: center;
@@ -37,13 +39,15 @@ h1 {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     margin-bottom: 20px;
 }
-/* 버튼 그룹 스타일 */
+
 .button-group {
     display: flex;
-    gap: 10px; /* 버튼들 사이에 간격 추가 */
+    gap: 10px;
 }
 
-/* 메인 설정 영역 (컬럼 선택 & 검증 조건): 가로 배치 */
+/* ================================
+   메인 설정 영역
+================================ */
 #main-settings {
     display: flex;
     gap: 20px;
@@ -55,26 +59,32 @@ h1 {
     background-color: #ffffff;
     padding: 20px;
     border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
 }
 
-/* 컬럼 그룹 제목 (파랑 대신 검정/차분한 색상으로) */
+#left-settings-group .control-group {
+    margin-bottom: 20px;
+}
+
 .control-section label {
     font-weight: bold;
     display: block;
     margin-bottom: 10px;
-    color: #34495e; /* 진한 회색/검정 계열로 변경 */
+    color: #34495e;
 }
 
-/* 컬럼 선택 영역 (세로 길이 제한) */
+/* ================================
+   체크박스 스크롤 영역
+================================ */
 .checkbox-scroll-area {
     max-height: 180px;
     overflow-y: auto;
     padding: 10px;
-    border: 1px solid #ced4da; /* 테두리색 변경 */
+    border: 1px solid #ced4da;
     border-radius: 4px;
     background-color: #fcfcfc;
 }
+
 #displayColumns label {
     display: block !important;
     margin-bottom: 5px;
@@ -82,8 +92,9 @@ h1 {
     color: #333;
 }
 
-
-/* 검증 조건 상세 설정 스타일 */
+/* ================================
+   라디오 옵션 그룹
+================================ */
 .radio-option-group {
     margin-bottom: 15px;
     padding: 10px;
@@ -92,21 +103,20 @@ h1 {
     transition: background-color 0.2s, border-color 0.2s;
 }
 
-/* ✨ 선택된 라디오 그룹 강조 (핵심 개선) */
-/* 선택된 라디오 버튼의 부모 요소에 시각적 피드백 제공 */
+/* 선택된 라디오 그룹 강조 */
 .radio-option-group:has(input[type="radio"]:checked) {
-    background-color: var(--primary-light); /* 밝은 파랑 배경 */
-    border: 1px solid var(--primary-color); /* 강조 테두리 */
+    background-color: var(--primary-light);
+    border: 1px solid var(--primary-color);
 }
 
-/* 라디오 버튼 텍스트 (이전 요청으로 추가된 스타일 유지) */
 .radio-option-group > input[type="radio"],
 .radio-option-group > label {
     vertical-align: middle;
 }
+
 .radio-option-group > label {
-    font-weight: normal;	
-    color: #333; /* 텍스트 색상 검정 유지 */
+    font-weight: normal;
+    color: #333;
     display: inline-block;
     margin-bottom: 0;
     cursor: pointer;
@@ -121,20 +131,18 @@ h1 {
     align-items: center;
 }
 
-
-/* Select 및 Button 스타일 */
+/* ================================
+   Select / Button 스타일
+================================ */
 select, #checkBtn, #saveCsvBtn {
     padding: 8px;
     border-radius: 4px;
     border: 1px solid #ced4da;
     font-size: 14px;
-    /*margin-right: 5px;*/
     background-color: #fff;
 }
 
-select {
-    width: 120px;
-}
+select { width: 120px; }
 
 #checkBtn {
     background-color: var(--success-color);
@@ -144,6 +152,9 @@ select {
     transition: background-color 0.2s;
     border-color: var(--success-color);
 }
+
+#checkBtn:hover { background-color: #27ae60; }
+
 #saveCsvBtn {
     background-color: #3498db;
     color: white;
@@ -153,15 +164,11 @@ select {
     border-color: #3498db;
 }
 
-#checkBtn:hover {
-    background-color: #27ae60;
-}
-#saveCsvBtn:hover {
-    background-color: #2980b9;
-}
+#saveCsvBtn:hover { background-color: #2980b9; }
 
-/* ------------------ 결과 테이블 스타일 ------------------ */
-
+/* ================================
+   결과 테이블 스타일
+================================ */
 #resultTable {
     width: 100%;
     border-collapse: collapse;
@@ -169,18 +176,18 @@ select {
     background-color: #ffffff;
     border-radius: 8px;
     overflow: hidden;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
 }
 
-#resultTable th, #resultTable td {
+#resultTable th,
+#resultTable td {
     padding: 12px 15px;
     text-align: left;
     border: 1px solid #e9ecef;
 }
 
-/* 테이블 헤더 색상 변경 */
 #resultTable thead tr {
-    background-color: var(--primary-color); /* 차분한 파랑 적용 */
+    background-color: var(--primary-color);
     color: white;
     font-weight: bold;
 }
@@ -189,10 +196,9 @@ select {
     background-color: #f8f9fa;
 }
 
-/* ⭐⭐ 수정: 오류 행 강조 (배경/텍스트 색상 채도/밝기 낮춤) ⭐⭐ */
 #resultTable tbody tr.error {
-    background-color: #fcebeb; /* 기존 #ffebed에서 더 밝은(채도 낮은) 배경색 */
-    color: var(--error-color); /* 부드러운 오류 색상 사용 */
+    background-color: #fcebeb;
+    color: var(--error-color);
     font-weight: bold;
     border-left: 5px solid var(--error-color);
 }
@@ -200,77 +206,54 @@ select {
 #resultTable tbody tr.error td {
     color: var(--error-color);
 }
-/* 등급 설정 토글 버튼 스타일 */
-.settings-toggle-btn {
-    background: none;
-    border: none;
-    color: var(--primary-color);
-    font-weight: bold;
-    cursor: pointer;
-    padding: 5px 0;
-    font-size: 14px;
+
+/* ================================
+   Summary / Filter Bar
+================================ */
+#summary-and-filter-bar {
     display: flex;
-    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #f0f0f0;
 }
 
-#toggleIcon {
-    margin-right: 5px;
-    transition: transform 0.2s;
+#summaryPanel {
+    font-size: 1em;
+    font-weight: 600;
 }
 
-/* 토글된 상태 (화살표가 위를 향함) */
-.settings-toggle-btn.toggled #toggleIcon {
-    transform: rotate(180deg);
-}
-
-/* 입력 필드 레이아웃 (새로 추가될 설정 영역) */
-.grade-input-group {
-    display: flex;
-    align-items: center;
-    margin-bottom: 5px;
-    font-size: 13px;
-}
-.grade-input-group label {
-    width: 60px; /* 라벨 너비 고정 */
-    font-weight: normal;
-    color: #333;
-    margin-bottom: 0;
-}
-.grade-input-group input {
-    width: 50px;
-    padding: 3px;
-    text-align: right;
-    margin-left: 5px;
-}
-/* style.css 에 추가하거나 기존 토글 스위치 CSS를 대체 */
-
-/* 필터 컨트롤 그룹 전체의 정렬 및 간격 조정 */
 #filter-controls {
-    /* margin-top: 10px; */ /* #summary-and-filter-bar에 의해 필요 없음 */
     display: flex;
-    align-items: center; 
-    gap: 8px; 
-    font-size: 0.95em; 
-    color: #333; 
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9em;
 }
 
-/* 토글 스위치 컨테이너 크기 조정 */
+#filter-controls label {
+    cursor: pointer;
+    user-select: none;
+}
+
+/* ================================
+   토글 스위치
+================================ */
 .toggle-switch {
     position: relative;
     display: inline-block;
-    width: 38px;	
-    height: 20px;	
-    /* margin-left: 10px; */ 
+    width: 38px;
+    height: 20px;
 }
 
-/* 체크박스는 그대로 숨김 */
 .toggle-switch input {
     opacity: 0;
     width: 0;
     height: 0;
 }
 
-/* 슬라이더 배경 스타일 */
 .slider {
     position: absolute;
     cursor: pointer;
@@ -280,60 +263,70 @@ select {
     bottom: 0;
     background-color: #ccc;
     transition: .4s;
-    border-radius: 20px; 
+    border-radius: 20px;
 }
 
-/* 슬라이더 내부의 동그라미 (손잡이) 스타일 */
 .slider:before {
     position: absolute;
     content: "";
-    height: 16px; 
-    width: 16px;	
-    left: 2px;	
-    bottom: 2px;	
+    height: 16px;
+    width: 16px;
+    left: 2px;
+    bottom: 2px;
     background-color: white;
     transition: .4s;
-    border-radius: 50%; 
+    border-radius: 50%;
 }
 
-/* ⭐⭐ 수정: 체크되었을 때 (켜졌을 때) 배경색 채도/밝기 낮춤 ⭐⭐ */
 input:checked + .slider {
-    background-color: #f0ad4e; /* 기존 #f44336에서 주황색 계열로 변경 (주의: 오류 색상이지만 너무 강렬하지 않게) */
+    background-color: #f0ad4e;
 }
 
-/* 체크되었을 때 슬라이더 동그라미 이동 */
 input:checked + .slider:before {
-    transform: translateX(18px); 
+    transform: translateX(18px);
 }
 
-/* 추가적으로, 라벨에 cursor: pointer를 주면 클릭 영역이 넓어져 사용성이 좋습니다. */
-#filter-controls label {
+/* ================================
+   등급 분포 토글 버튼
+================================ */
+.detail-toggle-btn {
+    background: none;
+    border: none;
+    color: var(--primary-color);
+    font-weight: bold;
     cursor: pointer;
-    user-select: none; 
-}
-/* style.css 에 추가 */
-
-/* ⭐⭐ 1. 새로운 컨테이너에 Flexbox 적용 ⭐⭐ */
-#summary-and-filter-bar {
+    padding: 5px 0;
+    font-size: 14px;
     display: flex;
-    justify-content: space-between; 
-    align-items: center; 
-    padding: 10px;
-    background-color: #f8f9fa; 
-    border-bottom: 1px solid #ced4da;
-    border-radius: 5px 5px 0 0;
+    align-items: center;
+    white-space: nowrap;
 }
 
-/* ⭐⭐ 2. summaryPanel 텍스트 강조 ⭐⭐ */
-#summaryPanel {
+#toggleIcon {
+    margin-right: 5px;
+    transition: transform 0.2s;
+}
+
+/* ================================
+   등급 분포 상세 영역
+================================ */
+#gradeDistributionDetail {
+    width: 100%;
+    flex-basis: 100%;
+    padding: 10px 0;
+    margin-top: 10px;
+    margin-bottom: 5px;
+    border-top: 1px dotted #ccc;
+}
+
+#gradeDistributionDetail h4 {
+    color: #444;
     font-size: 1em;
-    font-weight: 600;
+    margin-top: 0;
 }
 
-/* 기존 filter-controls 스타일 (필요하다면) */
-#filter-controls {
-    display: flex;
-    align-items: center;	
-    gap: 8px;	
-    font-size: 0.9em;	
+.grade-distribution-text-item {
+    padding: 3px 0;
+    margin-left: 10px;
+    font-size: 0.95em;
 }
