@@ -15,7 +15,14 @@ const DEFAULT_GRADE_CUTOFF = {
 };
 
 /**
- * ⭐ 데이터 파일에서 과목 코드를 찾을 컬럼명 설정
+ *  데이터 파일에서 과목 코드를 찾을 컬럼명 설정
  */
 const SUBJECT_COLUMN_KEY = 'COURSE_CODE'; 
 //현재 설정된 컬럼명 : COURSE_CODE
+/**
+ * 기본값 설정
+ * 점수 컬럼 : FINAL_SCORE
+ * 등급 컬럼 : FINAL_GRADE
+ */
+const DEFAULT_SCORE_COLUMN_KEY = 'FINAL_SCORE';
+const DEFAULT_GRADE_COLUMN_KEY = 'FINAL_GRADE';
