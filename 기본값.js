@@ -20,9 +20,18 @@ const DEFAULT_GRADE_CUTOFF = {
 const SUBJECT_COLUMN_KEY = 'COURSE_CODE'; 
 //현재 설정된 컬럼명 : COURSE_CODE
 /**
+*비율 넣다 말은거
+*/
+const DEFAULT_PERCENT_CUTOFF = {
+    'A': 30, // A+/A 그룹의 비율
+    'B': 30  // B+/B 그룹의 비율
+    // 필요한 다른 비율도 추가 가능
+};
+/**
  * 기본값 설정
  * 점수 컬럼 : FINAL_SCORE
  * 등급 컬럼 : FINAL_GRADE
  */
 const DEFAULT_SCORE_COLUMN_KEY = 'FINAL_SCORE';
 const DEFAULT_GRADE_COLUMN_KEY = 'FINAL_GRADE';
+
