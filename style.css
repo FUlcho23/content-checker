@@ -1,5 +1,5 @@
 /* ================================
-   기본 설정 / 공통 색상
+기본 설정 / 공통 색상
 ================================ */
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -17,7 +17,7 @@ body {
 }
 
 /* ================================
-   제목 스타일
+제목 스타일
 ================================ */
 h1 {
     color: var(--primary-color);
@@ -27,7 +27,7 @@ h1 {
 }
 
 /* ================================
-   상단 컨트롤 영역
+상단 컨트롤 영역
 ================================ */
 #top-controls {
     display: flex;
@@ -46,7 +46,7 @@ h1 {
 }
 
 /* ================================
-   메인 설정 영역
+메인 설정 영역
 ================================ */
 #main-settings {
     display: flex;
@@ -74,7 +74,7 @@ h1 {
 }
 
 /* ================================
-   체크박스 스크롤 영역
+체크박스 스크롤 영역
 ================================ */
 .checkbox-scroll-area {
     max-height: 180px;
@@ -93,7 +93,7 @@ h1 {
 }
 
 /* ================================
-   라디오 옵션 그룹
+라디오 옵션 그룹
 ================================ */
 .radio-option-group {
     margin-bottom: 15px;
@@ -103,7 +103,6 @@ h1 {
     transition: background-color 0.2s, border-color 0.2s;
 }
 
-/* 선택된 라디오 그룹 강조 */
 .radio-option-group:has(input[type="radio"]:checked) {
     background-color: var(--primary-light);
     border: 1px solid var(--primary-color);
@@ -127,14 +126,43 @@ h1 {
     margin-left: 20px;
     padding: 5px 0;
     display: flex;
-    gap: 10px;
+    flex-wrap: wrap; /* 작은 화면에서 필요 시 줄바꿈 */
     align-items: center;
+    gap: 15px; /* 레이블과 선택창 간 간격 */
+}
+/* ================================
+점수/등급 옵션 상세 설정
+================================ */
+.option-details {
+    display: flex; /* Flexbox 활성화 */
+    flex-wrap: wrap;
+    gap: 15px 30px; /* 항목 간 간격을 넓혀 구분 명확화 (PC/모바일 공용) */
+    align-items: flex-start; /* 상단 정렬 */
+    margin-top: 8px;
+    margin-left: 20px;
+    padding: 5px 0;
+}
+
+.select-pair {
+    display: flex;
+    flex-direction: row;
+    gap: 5px; /* 레이블과 셀렉트 사이 간격 */
+    min-width: 180px; /* 셀렉트 박스가 너무 작아지지 않도록 최소 너비 설정 */
+}
+
+.select-pair label {
+    font-weight: bold; /* 레이블을 다시 강조 */
+    margin-bottom: 0;
+    color: #34495e;
+    font-size: 0.95em;
 }
 
 /* ================================
-   Select / Button 스타일
+Select / Button 스타일
 ================================ */
-select, #checkBtn, #saveCsvBtn {
+select,
+#checkBtn,
+#saveCsvBtn {
     padding: 8px;
     border-radius: 4px;
     border: 1px solid #ced4da;
@@ -142,7 +170,9 @@ select, #checkBtn, #saveCsvBtn {
     background-color: #fff;
 }
 
-select { width: 120px; }
+select {
+    width: 120px;
+}
 
 #checkBtn {
     background-color: var(--success-color);
@@ -153,7 +183,9 @@ select { width: 120px; }
     border-color: var(--success-color);
 }
 
-#checkBtn:hover { background-color: #27ae60; }
+#checkBtn:hover {
+    background-color: #27ae60;
+}
 
 #saveCsvBtn {
     background-color: #3498db;
@@ -164,10 +196,12 @@ select { width: 120px; }
     border-color: #3498db;
 }
 
-#saveCsvBtn:hover { background-color: #2980b9; }
+#saveCsvBtn:hover {
+    background-color: #2980b9;
+}
 
 /* ================================
-   결과 테이블 스타일
+결과 테이블 스타일
 ================================ */
 #resultTable {
     width: 100%;
@@ -177,6 +211,12 @@ select { width: 120px; }
     border-radius: 8px;
     overflow: hidden;
     box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+#resultTable th {
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
 }
 
 #resultTable th,
@@ -208,7 +248,7 @@ select { width: 120px; }
 }
 
 /* ================================
-   Summary / Filter Bar
+Summary / Filter Bar
 ================================ */
 #summary-and-filter-bar {
     display: flex;
@@ -239,7 +279,7 @@ select { width: 120px; }
 }
 
 /* ================================
-   토글 스위치
+토글 스위치
 ================================ */
 .toggle-switch {
     position: relative;
@@ -287,7 +327,7 @@ input:checked + .slider:before {
 }
 
 /* ================================
-   등급 분포 토글 버튼
+등급 분포 토글 버튼
 ================================ */
 .detail-toggle-btn {
     background: none;
@@ -306,13 +346,17 @@ input:checked + .slider:before {
     margin-right: 5px;
     transition: transform 0.2s;
 }
-
+.disabled-style {
+    opacity: 0.5; /* 버튼을 흐리게 만듭니다 */
+    cursor: not-allowed !important; /* 클릭 불가 커서 표시 */
+}
 /* ================================
-   등급 분포 상세 영역
+등급 분포 상세 영역
 ================================ */
 #gradeDistributionDetail {
     width: 100%;
-    flex-basis: 100%;
+    /* flex-basis: 100%; 은 flex 컨테이너 내부 요소가 아니므로 제거하거나,
+       필터 영역이 Flexbox였다면 제거해야 함. 일반적으로 필요 없음 */
     padding: 10px 0;
     margin-top: 10px;
     margin-bottom: 5px;
@@ -325,8 +369,330 @@ input:checked + .slider:before {
     margin-top: 0;
 }
 
+/* 항목 + 막대 그래프를 감싸는 컨테이너 */
 .grade-distribution-text-item {
+    display: flex;
+    align-items: center;
+    /* justify-content: space-between; (제거됨 - 왼쪽 정렬 유지) */
     padding: 3px 0;
     margin-left: 10px;
     font-size: 0.95em;
+    min-width: 350px;
+    white-space: nowrap;
+}
+
+/* 등급 텍스트 레이블 (막대 그래프 시작점 정렬용) */
+.grade-label {
+    width: 160px; /* 고정 너비 유지 */
+    flex-shrink: 0;
+    text-align: left;
+}
+
+/* 막대 그래프 컨테이너 (남은 공간 모두 차지) */
+.grade-bar-container {
+    flex-grow: 1; 
+    height: 12px;
+    background-color: #e9ecef;
+    border-radius: 3px;
+    margin: 0 10px;
+    overflow: hidden;
+}
+
+/* 막대 그래프 채우기 */
+.grade-bar-fill {
+    height: 100%;
+    background-color: var(--primary-color);
+    transition: width 0.5s ease-out;
+}
+
+/* 그룹 합산 항목 (단독 줄로 분리) */
+.grade-group-summary {
+    font-weight: bold;
+    margin-left: 10px; 
+    padding: 5px 0;
+    border-left: 3px solid #ccc; 
+    padding-left: 8px; 
+    display: block; 
+}
+
+/* ================================
+동적 멀티 필터
+================================ */
+#dynamic-filter-container {
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-top: 15px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px 30px;
+}
+
+.filter-control-group {
+    flex-basis: calc(50% - 15px);
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 5px;
+}
+
+.filter-control-group label {
+    font-weight: bold;
+    margin-bottom: 5px;
+    font-size: 0.9em;
+    color: #555;
+}
+
+/* ================================
+Select2 스타일 오버라이드
+================================ */
+.select2-container--default .select2-selection--multiple {
+    border: 1px solid #ced4da !important;
+    border-radius: 4px !important;
+    padding: 3px 6px;
+    min-height: 38px;
+    background-color: #fff;
+    cursor: text;
+}
+
+.select2-container--default .select2-selection--multiple .select2-selection__choice {
+    background-color: var(--primary-color) !important;
+    color: white !important;
+    border: 1px solid #3c75b7 !important;
+    border-radius: 4px;
+    padding: 1px 5px;
+    padding-right: 20px;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.select2-selection__choice__remove {
+    color: white !important;
+    float: right;
+    margin-left: 5px;
+}
+
+.select2-selection__choice__remove:hover {
+    color: #f8f9fa !important;
+}
+
+.select2-container--default .select2-search--inline .select2-search__field {
+    border: none;
+    outline: none;
+    padding: 0;
+    margin-top: 3px;
+    line-height: 1.5;
+}
+
+.select2-dropdown {
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    z-index: 1050;
+}
+
+.select2-container--default .select2-results__option--highlighted[aria-selected] {
+    background-color: var(--primary-light) !important;
+    color: #333;
+}
+
+/* ================================
+Select2 드롭다운 고정 문제 해결
+================================ */
+.select2-container--default .select2-dropdown--below {
+    z-index: 1050;
+}
+
+/* 필터 토글 */
+#toggleFilterBtn {
+    margin-bottom: 10px;
+    position: relative;
+    z-index: 10;
+}
+
+#dynamicFilterWrapper {
+    display: block;
+}
+
+.filter-hidden {
+    display: none !important;
+}
+.distribution-hidden {
+    display: none !important;
+}
+.columns-hidden {
+    display: none !important;
+}
+
+/* ================================
+테이블 래퍼
+================================ */
+.table-wrapper {
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+#resultTable {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+/* ================================
+반응형 웹 디자인
+================================ */
+@media (max-width: 768px) {
+
+    /* 상단 컨트롤 */
+    #top-controls {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 10px;
+    }
+
+    .button-group {
+        margin-top: 10px;
+        justify-content: stretch;
+        gap: 5px;
+    }
+
+    #checkBtn,
+    #saveCsvBtn {
+        flex: 1;
+        padding: 10px;
+        font-size: 16px;
+    }
+
+    /* 메인 설정 */
+    #main-settings {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .control-section {
+        box-shadow: none;
+    }
+
+    /* 동적 필터 한 줄로 */
+    #dynamic-filter-container {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .filter-control-group {
+        flex-basis: 100%;
+    }
+
+    /* 테이블 스크롤 */
+    .table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    #resultTable {
+        min-width: 600px;
+        width: auto;
+    }
+
+    #resultTable th,
+    #resultTable td {
+        padding: 8px 10px;
+        font-size: 12px;
+    }
+	/* 1. 상단 컨트롤 영역 (버튼 및 드롭다운) */
+    #top-controls {
+        flex-direction: column; 
+        align-items: stretch;
+    }
+
+    /* 🚨 버튼 그룹을 가로로 두 줄 배치하도록 수정 */
+    .button-group {
+        display: flex; /* Flexbox 유지 */
+        flex-wrap: wrap; /* 내용이 넘치면 다음 줄로 */
+        margin-top: 10px;
+        justify-content: space-between; /* 양 끝 정렬 */
+        gap: 5px 10px; /* 행 간격 5px, 열 간격 10px */
+    }
+    
+    /* 🚨 각 버튼/컨트롤이 그룹의 절반 너비를 차지하도록 설정 */
+    #file-upload-input, 
+    #load-data-btn,
+    #checkBtn, 
+    #saveCsvBtn {
+        /* 전체 너비 100%에서 열 간격 10px의 절반을 뺀 값 */
+        flex-basis: calc(50% - 5px); 
+        padding: 10px;
+        font-size: 14px;
+        text-align: center;
+    }
+    
+    /* 현재 파일명 표시 영역도 정렬에 참여시키거나, 별도 줄로 뺌 */
+    #current-file-display {
+        flex-basis: 100%; /* 한 줄 전체 사용 */
+        margin: 5px 0;
+        text-align: center;
+    }
+	.option-details {
+        flex-direction: row; /* 모바일에서 세로로 정렬 */
+        gap: 10px;
+    }
+    .select-pair {
+        min-width: 100%; /* 모바일에서 전체 너비 사용 */
+    }
+}
+/*--------------------------------------*/
+/* 파일 업로드 전체 영역 (박스 제거 버전) */
+#file-upload-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    /* 박스 요소 제거 */
+    padding: 0;
+    background: none;
+    border: none;
+    box-shadow: none;
+}
+
+/* 업로드 버튼 */
+#file-upload-controls label[for="fileInput"] {
+    background: #3a7afe;
+    color: white;
+    padding: 10px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: 0.2s;
+    border: none;
+}
+
+#file-upload-controls label[for="fileInput"]:hover {
+    background: #1f5bf0;
+}
+
+/* 파일 input 숨김 */
+#fileInput {
+    display: none;
+}
+
+/* Load Data 버튼 */
+#loadDataBtn {
+    background: #4c5cff;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+#loadDataBtn:hover {
+    background: #3f4dea;
+}
+
+/* 파일 이름 표시 */
+#fileNameDisplay {
+    font-size: 13px;
+    color: #333;
+    padding: 2px 6px;
+    margin-left: 4px;
 }
