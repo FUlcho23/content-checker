@@ -14,25 +14,18 @@ const DEFAULT_GRADE_CUTOFF = {
     'P': 70,
 };
 
-/**
- *  데이터 파일에서 과목 코드를 찾을 컬럼명 설정
- */
-const SUBJECT_COLUMN_KEY = 'COURSE_CODE'; 
-//현재 설정된 컬럼명 : COURSE_CODE
-/**
-*비율 넣다 말은거
-*/
-const DEFAULT_PERCENT_CUTOFF = {
-    'A': 30, // A+/A 그룹의 비율
-    'B': 30  // B+/B 그룹의 비율
-    // 필요한 다른 비율도 추가 가능
-};
-/**
- * 기본값 설정
- * 점수 컬럼 : FINAL_SCORE
- * 등급 컬럼 : FINAL_GRADE
- */
+//점수와 등급 컬럼 고정
 const DEFAULT_SCORE_COLUMN_KEY = 'FINAL_SCORE';
 const DEFAULT_GRADE_COLUMN_KEY = 'FINAL_GRADE';
 
+//기본 필터(검색때 쓸 값)지정 - 사유:함수가 들어간 셀을 만나면 로드하지 못함->어차피 고정된 값들 작성
+/* const DEFAULT_FILTER_COLUMNS = [
+    'YEAR','SEMESTER','COLLEGE_GROUP','COURSE_CODE','SECTION','USER_LOGIN','FINAL_SCORE','FINAL_GRADE'];  */
+const DEFAULT_FILTER_COLUMNS = [
+	'COURSE_CODE','SECTION','USER_LOGIN','FINAL_SCORE','FINAL_GRADE'];
+const DEFAULT_FILTER_SUBJECT = [
+	'이름', '학번', '학과', '재수강','상대평가_제외', 'FINAL_SCORE', 'FINAL_GRADE'
+];
 
+// 예시: 250명 초과 시 버튼 비활성화
+const MAX_STUDENTS_FOR_SINGLE_CLASS = 250;
