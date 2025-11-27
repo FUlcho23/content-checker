@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>내용 점검 도구</title>
     <link rel="stylesheet" href="style.css"> 
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
     <h1>내용 점검 도구</h1>
@@ -13,73 +15,91 @@
         <div id="file-management-section" class="control-group">
             <div id="file-upload-controls">
                 <label for="fileInput">📁 파일 업로드 (Excel/CSV)</label>
-                <input type="file" id="fileInput" accept=".xlsx, .xls, .csv">
+                <input type="file" id="fileInput">
                 <button id="loadDataBtn">데이터 로드 및 초기화</button>
-                <label id="fileNameDisplay">현재 로드된 파일: 없음</label>
+                <label id="fileNameDisplay">현재 파일: 없음</label>
             </div>
         </div>
         
         <div id="action-buttons-section" class="control-group">
-            <button id="checkBtn">검증하기</button>
             <button id="saveCsvBtn">CSV 저장</button>
         </div>
     </div>
     
-	<div id="main-settings">
-		<div id="left-settings-group" class="control-section"> 
-			<div id="subject-selection-section" class="control-group">
-				<label for="subjectSelect">과목 선택: 
-					<select id="subjectSelect"></select>
-				</label>
-			</div>
-			
-			<div id="display-column-group"> <label>표시할 컬럼 선택</label>
-				<div id="displayColumns" class="checkbox-scroll-area">
+    <div id="main-settings">
+        <div id="left-settings-group" class="control-section">
+            <button id="toggleFilterBtn" class="detail-toggle-btn">
+				데이터 필터 설정 <span id="filterToggleIcon">▼</span>
+			</button>
+            <div id="dynamicFilterWrapper">
+				<div id="dynamic-filter-container" class="control-group">
+				</div>
+				<div id="action-buttons-section" style="text-align: right">
+				    <button id="checkBtn">검증하기</button>
 				</div>
 			</div>
-		</div>
-		<div id="check-type-group" class="control-section">
-			<label>검증할 오류 선택 및 상세 설정</label>
-			<div class="radio-option-group">
-				<input type="radio" id="radioGradeCheck" name="checkType" value="gradeCheck" checked>
-				<label for="radioGradeCheck">점수 → 등급 검증</label>
-				<div id="gradeOptions" class="option-details">
-					점수 컬럼: <select id="scoreColumn"></select>
-					등급 컬럼: <select id="gradeColumn"></select>
-				</div>
-			</div> 
-			<div class="radio-option-group">
-				<input type="radio" id="radioNotNull" name="checkType" value="notNull">
-				<label for="radioNotNull">비어있는지 확인</label>
-				<div id="nullOptions" class="option-details">
-					대상 컬럼: <select id="nullColumn"></select>
-				</div>
-			</div>
-		</div>
-	</div>
-	
+            
+            <div id="display-column-group" class="control-group"> 
+				<button id="toggleColumnsBtn" class="detail-toggle-btn">
+					표시할 컬럼 선택<span id="ColumnsToggleIcon">▶</span>
+				</button>
+                <div id="displayColumns" class="checkbox-scroll-area">
+                </div>
+            </div>
+            
+        </div>
+        
+        <div id="check-type-group" class="control-section">
+            <label>검증할 오류 선택 및 상세 설정</label>
+            <div class="radio-option-group">
+                <input type="radio" id="radioGradeCheck" name="checkType" value="gradeCheck" checked>
+                <label for="radioGradeCheck">점수 → 등급 검증</label>
+                <div id="gradeOptions" class="option-details">
+                    <div class="select-pair">
+						점수 컬럼:<select id="scoreColumn" disabled ></select>
+					</div>
+					<div class="select-pair">
+						등급 컬럼:<select id="gradeColumn" disabled ></select>
+					</div>
+                </div>
+            </div> 
+            <div class="radio-option-group">
+                <input type="radio" id="radioNotNull" name="checkType" value="notNull">
+                비어있는지 확인
+                <div id="nullOptions" class="option-details">
+                    대상 컬럼: <select id="nullColumn"></select>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <div id="result-container">
         <div id="summary-and-filter-bar">
             <label id="summaryPanel"></label>
-			<button id="toggleDistributionBtn" class="detail-toggle-btn">
-				등급 분포 자세히 보기 <span id="distributionToggleIcon">▼</span>
-			</button>
+            <button id="toggleDistributionBtn" class="detail-toggle-btn">
+                등급 분포 자세히 보기 <span id="distributionToggleIcon">▼</span>
+            </button>
             <div id="filter-controls">
-			
                 <label for="errorToggle">🚨 오류 행만 보기</label>
                 <label class="toggle-switch">
                     <input type="checkbox" id="errorToggle"> <span class="slider round"></span>
                 </label>
             </div>
         </div>
-		<div id="gradeDistributionDetail" style="display: none;"></div>
-        <table id="resultTable">
-            <thead>
-                <tr id="headerRow"></tr> </thead>
-            <tbody></tbody> </table>
-    </div>
+        <div id="gradeDistributionDetail" class="distribution-hidden"></div>
+		<div class="table-wrapper">
+			<table id="resultTable">
+				<thead>
+					<tr id="headerRow"></tr> 
+				</thead>
+				<tbody></tbody> 
+			</table>
+		</div>
+	</div>
     
     <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="기본값.js"></script>
     <script src="script.js"></script>
 </body>
