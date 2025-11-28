@@ -70,9 +70,6 @@ if (displayColumns && ColumnsToggleIcon) {
  */
 function createDynamicFilters(filterColumns) { // 💡 인수 filterColumns를 받음
 
-    // #filterContainer 초기화 (만약 필터 설정 전체를 감싸는 상위 요소라면)
-    // filterContainer.innerHTML = ''; // 이 코드는 주석 처리하겠습니다.
-
     // HTML 요소 가져오기
     const dynamicFilterContainer = document.getElementById('dynamic-filter-container');
 
@@ -84,13 +81,13 @@ function createDynamicFilters(filterColumns) { // 💡 인수 filterColumns를 �
         return;
     }
 
-    // 💡 초기화: 필터링할 데이터가 없으면 즉시 종료
+    //필터링할 데이터가 없으면 즉시 종료
     if (allRows.length === 0) return;
     
     // 1. 유니크 값 추출 및 filterOptions 객체 채우기
-    filterOptions = {}; // 💡 필터 옵션 초기화 (여기서 한 번만 초기화)
+    filterOptions = {}; // 필터 옵션 초기화
 
-    // 💡 수정: 전달받은 filterColumns 인수를 사용하여 반복
+    // 전달받은 filterColumns 인수를 사용하여 반복
     filterColumns.forEach(key => { 
         if (!allRows[0].hasOwnProperty(key)) {
              console.warn(`지정된 필터 컬럼 키 "${key}"가 로드된 데이터에 없습니다.`);
@@ -112,9 +109,9 @@ function createDynamicFilters(filterColumns) { // 💡 인수 filterColumns를 �
     });
 	
 	// 2. Select2 UI 렌더링
-    activeFilters = {}; // 💡 활성 필터 상태 초기화 (여기서 한 번만 초기화)
+    activeFilters = {}; //활성 필터 상태 초기화
     
-    // 💡 수정: 전달받은 filterColumns 인수를 사용하여 반복
+    //전달받은 filterColumns 인수를 사용하여 반복
     filterColumns.forEach(columnKey => { 
         const optionValues = filterOptions[columnKey];
         
@@ -473,81 +470,52 @@ checkBtn.addEventListener("click", () => {
         '기타': 0,
         '점수 오류/누락': 0 
     }; 
+    
+    const scoreCol = scoreColumn.value; // 점수 컬럼 키
+    const gradeCol = gradeColumn.value; // 등급 컬럼 키
+    const nullCol = nullColumn ? nullColumn.value : null; // 널값 검사용 컬럼 키 (필요 시)
 
     // --- 4. 데이터 검증 루프 ---
     rows.forEach(row => {
         let isError = false;
         row[EXPECTED_GRADE_COLUMN] = '';
 
-        if (checkType.value === "gradeCheck") {
-            const scoreCol = scoreColumn.value;
-            const gradeCol = gradeColumn.value;
-
-            const score = Number(row[scoreCol]);
-            const grade = String(row[gradeCol]).toUpperCase();
-
-            const isScoreInvalid = (isNaN(score) || row[scoreCol] === null || row[scoreCol] === "");
-
-            if (isScoreInvalid) {
-                isError = true;
-                row[EXPECTED_GRADE_COLUMN] = '점수 오류/누락';
-                gradeCounts['점수 오류/누락']++;
+        // A. 등급 카운팅 로직 (항상 실행)
+        const originalGrade = String(row[gradeCol] || '').toUpperCase();
+        
+        if (gradeCol && originalGrade) {
+            if (gradeCounts.hasOwnProperty(originalGrade)) {
+                gradeCounts[originalGrade]++;
             } else {
-                let originalGrade = grade;
-                if (gradeCounts.hasOwnProperty(originalGrade)) {
-                    gradeCounts[originalGrade]++;
-                } else if (originalGrade) {
-                    gradeCounts['기타']++;
-                }
-
-                const isPassFailScheme = (grade === 'P' || grade === 'NP');
-
-                if (isPassFailScheme) {
-                    const cutoffP = gradeCutoff['P'] || 0;
-                    let expectedGrade_PNP = (score >= cutoffP) ? "P" : "NP";
-                    row[EXPECTED_GRADE_COLUMN] = expectedGrade_PNP;
-                    if (grade !== expectedGrade_PNP) {
-                        isError = true;
-                    }
-
-                } else {
-                    const gradeLevels = [
-                        { grade: "A+", cutoff: gradeCutoff['A+'] || 0 },
-                        { grade: "A0",  cutoff: gradeCutoff['A0'] || 0 },
-                        { grade: "B+", cutoff: gradeCutoff['B+'] || 0 },
-                        { grade: "B0",  cutoff: gradeCutoff['B0'] || 0 },
-                        { grade: "C+", cutoff: gradeCutoff['C+'] || 0 },
-                        { grade: "C0",  cutoff: gradeCutoff['C0'] || 0 },
-                        { grade: "D+", cutoff: gradeCutoff['D+'] || 0 },
-                        { grade: "D0",  cutoff: gradeCutoff['D0'] || 0 }
-                    ];
-
-                    let expectedGrade = "F";
-
-                    for (const level of gradeLevels) {
-                        if (level.cutoff > 0 && score >= level.cutoff) {
-                            expectedGrade = level.grade;
-                            break;
-                        }
-                    }
-
-                    row[EXPECTED_GRADE_COLUMN] = expectedGrade;
-
-                    if (grade !== expectedGrade) {
-                        isError = true;
-                    }
-                }
+                gradeCounts['기타']++;
             }
-        } 
+        }
+
+        // B. 검증 실행 (분리된 함수 호출)
+        if (checkType.value === "gradeCheck") {
+            const gradeCheckResult = runGradeCheck(row, gradeCol, scoreCol, gradeCutoff);
+            
+            isError = gradeCheckResult.isError;
+            row[EXPECTED_GRADE_COLUMN] = gradeCheckResult.expectedGrade;
+
+            if (gradeCheckResult.isScoreInvalid) {
+                // 점수 오류인 경우, 이미 카운트된 원본 등급 카운터를 조정하고 오류 카운트를 증가시킵니다.
+                // (선택 사항이지만, 분포율 통계의 정확도를 높일 수 있습니다.)
+                if (gradeCol && originalGrade && gradeCounts.hasOwnProperty(originalGrade)) {
+                    gradeCounts[originalGrade]--; // 원본 등급 카운트에서 제외
+                }
+                gradeCounts['점수 오류/누락']++;
+            }
+        } 
         
         if (checkType.value === "notNull") {
-            const col = nullColumn.value;
-            const val = row[col];
-
-            if (val === null || val === "") {
+            if (nullCol && runNotNullCheck(row, nullCol)) {
                 isError = true;
             }
         }
+		//---새로운 검증이 들어올 자리
+		
+		//---
 
         if (isError) {
             errorRowsToExport.push(row);
@@ -559,10 +527,12 @@ checkBtn.addEventListener("click", () => {
 
     // --- 6. 등급 분포율 계산 및 렌더링 ---
     const totalStudents = rows.length;
-    const finalDistribution = calculateDistribution(gradeCounts, totalStudents);
+    const finalDistribution = calculateDistribution(gradeCounts, totalStudents); 
     renderGradeDistributionTextUI(finalDistribution, totalStudents);
-	//한 과목인지 확인(250개 이하인지)
-	updateGradeDistributionButton();
+    
+    // 한 과목인지 확인
+    updateGradeDistributionButton();
+    
     // --- 7. 검증 후 결과 테이블 렌더링 ---
     if (selectedColumns.length > 0 && !currentSortColumn) {
         currentSortColumn = selectedColumns[0];
@@ -571,7 +541,76 @@ checkBtn.addEventListener("click", () => {
 
     renderResultTable(rows, selectedColumns, checkType.value);
 });
+//---------------------------------------------
+//점수/등급 일치 여부를 검사하고 예상 등급을 설정-검증용 필터1
+//@param {object} row - 현재 데이터 행 객체
+//@param {string} gradeCol - 등급 컬럼 키
+//@param {string} scoreCol - 점수 컬럼 키
+//@param {object} gradeCutoff - 등급별 커트라인 객체
+//@returns {{isError: boolean, expectedGrade: string, isScoreInvalid: boolean}} 검증 결과
+//----------------------------------------------
+function runGradeCheck(row, gradeCol, scoreCol, gradeCutoff) {
+    let isError = false;
+    let expectedGrade = '';
 
+    const score = Number(row[scoreCol]);
+    const grade = String(row[gradeCol] || '').toUpperCase();
+
+    const isScoreInvalid = (isNaN(score) || row[scoreCol] === null || row[scoreCol] === "");
+
+    if (isScoreInvalid) {
+        isError = true;
+        expectedGrade = '점수 오류/누락';
+        // 이 함수 내에서는 gradeCounts 카운트는 직접 건드리지 않습니다.
+    } else {
+        const isPassFailScheme = (grade === 'P' || grade === 'NP');
+
+        if (isPassFailScheme) {
+            const cutoffP = gradeCutoff['P'] || 0;
+            expectedGrade = (score >= cutoffP) ? "P" : "NP";
+            if (grade !== expectedGrade) {
+                isError = true;
+            }
+        } else {
+            const gradeLevels = [
+                { grade: "A+", cutoff: gradeCutoff['A+'] || 0 },
+                { grade: "A0",  cutoff: gradeCutoff['A0'] || 0 },
+                { grade: "B+", cutoff: gradeCutoff['B+'] || 0 },
+                { grade: "B0",  cutoff: gradeCutoff['B0'] || 0 },
+                { grade: "C+", cutoff: gradeCutoff['C+'] || 0 },
+                { grade: "C0",  cutoff: gradeCutoff['C0'] || 0 },
+                { grade: "D+", cutoff: gradeCutoff['D+'] || 0 },
+                { grade: "D0",  cutoff: gradeCutoff['D0'] || 0 }
+            ];
+
+            expectedGrade = "F";
+
+            for (const level of gradeLevels) {
+                if (level.cutoff > 0 && score >= level.cutoff) {
+                    expectedGrade = level.grade;
+                    break;
+                }
+            }
+
+            if (grade !== expectedGrade) {
+                isError = true;
+            }
+        }
+    }
+    
+    return { isError, expectedGrade, isScoreInvalid };
+}
+
+//---------------------------------
+//특정 컬럼의 널값 여부를 검사-검증용 필터2
+//@param {object} row - 현재 데이터 행 객체
+//@param {string} col - 검사할 컬럼 키
+//@returns {boolean} 널값이면 true, 아니면 false
+//----------------------------------
+function runNotNullCheck(row, col) {
+    const val = row[col];
+    return (val === null || val === "");
+}
 // -----------------------------
 // CSV 저장 버튼 이벤트 리스너
 // -----------------------------
@@ -904,11 +943,11 @@ function renderColumnSelect(id, columns, defaultValue) {
 }
 //===============================================================================
 // 범용 토글 함수
-// @param {HTMLElement} toggleBtn - 클릭 이벤트를 받을 버튼 요소.
-// @param {HTMLElement} contentWrapper - 실제로 숨겨지거나 보여질 내용 컨테이너 요소.
-// @param {HTMLElement} iconElement - 아이콘 텍스트를 담고 있는 요소.
-// @param {string} hiddenClass - 내용을 숨기는 데 사용되는 CSS 클래스 이름 (예: 'filter-hidden').
-// @param {string} toggleClass - (선택 사항) 버튼 자체에 토글할 클래스 (예: 'toggled').
+// @param {HTMLElement} toggleBtn - 클릭 이벤트를 받을 버튼 요소
+// @param {HTMLElement} contentWrapper - 실제로 숨겨지거나 보여질 내용 컨테이너 요소
+// @param {HTMLElement} iconElement - 아이콘 텍스트를 담고 있는 요소
+// @param {string} hiddenClass - 내용을 숨기는 데 사용되는 CSS 클래스
+// @param {string} toggleClass - 버튼 자체에 토글할 클래스(기본값 지정되어있음, 선택사항)
 //================================================================================
 function setupGeneralToggle(toggleBtn, contentWrapper, iconElement, hiddenClass, toggleClass = null) {
     if (!toggleBtn || !contentWrapper || !iconElement) return;
@@ -1015,4 +1054,3 @@ function updateGradeDistributionButton() {
         distributionToggleIcon.innerHTML = '▶';
     }
 }
-
