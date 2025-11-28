@@ -28,4 +28,5 @@ const DEFAULT_FILTER_SUBJECT = [
 ];
 
 // 예시: 250명 초과 시 버튼 비활성화
-const MAX_STUDENTS_FOR_SINGLE_CLASS = 250;
+const MAX_STUDENTS_FOR_SINGLE_CLASS = 150;
+
