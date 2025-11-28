@@ -282,30 +282,36 @@ loadDataBtn.addEventListener('click', () => {
 
 			} else {
 				// ------------------------------------------------------------------
-				// 💡 핵심 로직 2: 필터 우선순위 체크 (필수 키는 존재하는 경우)
+				// 💡 핵심 로직 2: 필터 우선순위 체크 (단일 if/else if 체인)
 				// ------------------------------------------------------------------
-				
-				// 1. DEFAULT_FILTER_COLUMNS (5개)가 모두 존재하는지 확인
+
+				// 1. DEFAULT_FILTER_COLUMNS (5개) 모두 존재 여부
 				const hasAllDefault = DEFAULT_FILTER_COLUMNS.every(key => allFileColumns.includes(key));
 
+				// 2. DEFAULT_FILTER_SUBJECT_RE (7개) 모두 존재 여부
+				const hasAllSubjectRE = DEFAULT_FILTER_SUBJECT_RE.every(key => allFileColumns.includes(key));
+
+				// 3. DEFAULT_FILTER_SUBJECT_AE (6개) 모두 존재 여부
+				const hasAllSubjectAE = DEFAULT_FILTER_SUBJECT_AE.every(key => allFileColumns.includes(key));
+
+
 				if (hasAllDefault) {
-					// ✅ 우선순위 1: 5개 기본 컬럼이 모두 존재하면, 그 5개만 사용
+					// ✅ 우선순위 1
 					filterColumnsToUse = DEFAULT_FILTER_COLUMNS;
 					
-				} else {
-					// 2. DEFAULT_FILTER_SUBJECT (7개)가 모두 존재하는지 확인
-					const hasAllSubject = DEFAULT_FILTER_SUBJECT.every(key => allFileColumns.includes(key));
+				} else if (hasAllSubjectRE) {
+					// ✅ 우선순위 2
+					filterColumnsToUse = DEFAULT_FILTER_SUBJECT_RE;
 					
-					if (hasAllSubject) {
-						// ✅ 우선순위 2: 7개 과목 컬럼이 모두 존재하면, 그 7개만 사용
-						filterColumnsToUse = DEFAULT_FILTER_SUBJECT;
-						
-					} else {
-						// ✅ 우선순위 3: 두 경우 모두 아니면, 전체 파일 컬럼 사용
-						filterColumnsToUse = allFileColumns;
-					}
+				} else if (hasAllSubjectAE) {
+					// ✅ 우선순위 3
+					filterColumnsToUse = DEFAULT_FILTER_SUBJECT_AE;
+					
+				} else {
+					// ✅ 우선순위 4 (모두 실패)
+					filterColumnsToUse = allFileColumns;
 				}
-				
+
 				// 필수 키가 존재하므로 기본값 설정
 				targetScoreKey = DEFAULT_SCORE_COLUMN_KEY;
 				targetGradeKey = DEFAULT_GRADE_COLUMN_KEY;
@@ -1009,3 +1015,4 @@ function updateGradeDistributionButton() {
         distributionToggleIcon.innerHTML = '▶';
     }
 }
+
