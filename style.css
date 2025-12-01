@@ -522,6 +522,9 @@ Select2 드롭다운 고정 문제 해결
 .columns-hidden {
     display: none !important;
 }
+.distribution-hidden{
+	display: none !important;
+};
 
 /* ================================
 테이블 래퍼
@@ -637,6 +640,14 @@ Select2 드롭다운 고정 문제 해결
     .select-pair {
         min-width: 100%; /* 모바일에서 전체 너비 사용 */
     }
+	#file-upload-controls {
+        flex-wrap: wrap;     /* 줄바꿈 허용 */
+    }
+
+    #file-upload-controls .m_filename {
+        flex-basis: 100%;    /* 강제로 한 줄 전체 차지 */
+        margin-top: 8px;
+    }
 }
 /*--------------------------------------*/
 /* 파일 업로드 전체 영역 (박스 제거 버전) */
@@ -695,4 +706,53 @@ Select2 드롭다운 고정 문제 해결
     color: #333;
     padding: 2px 6px;
     margin-left: 4px;
+}
+
+/* ================================
+4. 제한 비율 설정 목록 (#customLimitList)
+================================ */
+#customLimitList {
+    margin-top: 12px;
+    padding: 14px 16px;
+    border: 1px solid #e3e3e3;  
+    border-radius: 8px;
+    background-color: #fafafa; 
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+}
+
+/* 리스트 항목 */
+.custom-limit-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 9px 4px;
+    border-bottom: 1px solid #ededed;
+    font-size: 0.93em;
+    color: #444; 
+}
+
+.custom-limit-item:last-child {
+    border-bottom: none;
+}
+
+/* 삭제 버튼 - 저채도 톤 */
+.btn-remove-limit {
+    background-color: #d87777;
+    color: white;
+    padding: 4px 10px;
+    font-size: 0.82em;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    transition:
+        background-color 0.2s ease,
+        transform 0.15s ease;
+}
+
+.btn-remove-limit:hover {
+    background-color: #c46b6b;
+}
+
+.btn-remove-limit:active {
+    transform: scale(0.97);
 }
