@@ -950,9 +950,10 @@ function renderGradeDistributionTextUI(gradeDistributionData, totalStudents) {
 
     // 1. 그룹 합산 비율 계산
     const totalA = (gradeDistributionData['A+'] || 0) + (gradeDistributionData['A0'] || 0);
-    // B 그룹은 '나머지'로 계산 (전체 비율의 합에서 A 그룹 비율을 제외)
+	const totalB = (gradeDistributionData['B+'] || 0) + (gradeDistributionData['B0'] || 0);
+    // C 그룹은 '나머지'로 계산 (전체 비율의 합에서 A, B 그룹 비율을 제외)
     const totalPercentageSum = Object.values(gradeDistributionData).reduce((sum, current) => sum + current, 0);
-    const totalB = totalPercentageSum - totalA; 
+    const totalC = totalPercentageSum - (totalA + totalB); 
     
     // 2. A 그룹 합산 항목 (span) 생성
     const totalALine = document.createElement("span"); 
@@ -960,11 +961,17 @@ function renderGradeDistributionTextUI(gradeDistributionData, totalStudents) {
     totalALine.style.color = '#007bff';
     totalALine.innerHTML = `&emsp;A 그룹 (A+/A0) 합산: ${totalA.toFixed(1)}%`;
     
-    // 3. B 그룹 합산 항목 (span) 생성
+	// 2. B 그룹 합산 항목 (span) 생성
     const totalBLine = document.createElement("span"); 
     totalBLine.className = "grade-group-summary";
-    totalBLine.style.color = '#28a745';
-    totalBLine.innerHTML = `&emsp;B 그룹 (나머지) 합산: ${totalB.toFixed(1)}%`;
+    totalBLine.style.color = '#6f42c1';
+    totalBLine.innerHTML = `&emsp;B 그룹 (B+/B0) 합산: ${totalB.toFixed(1)}%`;
+	
+    // 3. 나머지 그룹 합산 항목 (span) 생성
+    const totalCLine = document.createElement("span"); 
+    totalCLine.className = "grade-group-summary";
+    totalCLine.style.color = '#28a745';
+    totalCLine.innerHTML = `&emsp;C 그룹 (나머지) 합산: ${totalC.toFixed(1)}%`;
 
     // 4. 등급별 항목 및 막대 그래프 렌더링
     displayOrder.forEach(grade => {
@@ -1012,6 +1019,7 @@ function renderGradeDistributionTextUI(gradeDistributionData, totalStudents) {
     
     detailContainer.appendChild(totalALine);
     detailContainer.appendChild(totalBLine);
+	detailContainer.appendChild(totalCLine);
     
     // 5. 전체 총합 라인 렌더링
     const totalLine = document.createElement("p");
@@ -1308,3 +1316,4 @@ function renderLimitCheckSummary(isError, errorDetails) {
         summaryPanel.classList.add('limit-check-ok');
     }
 }
+
