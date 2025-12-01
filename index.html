@@ -17,7 +17,7 @@
                 <label for="fileInput">📁 파일 업로드 (Excel/CSV)</label>
                 <input type="file" id="fileInput">
                 <button id="loadDataBtn">데이터 로드 및 초기화</button>
-                <label id="fileNameDisplay">현재 파일: 없음</label>
+                <label id="fileNameDisplay" class="m_filename">현재 파일: 없음</label>
             </div>
         </div>
         
@@ -46,7 +46,6 @@
                 <div id="displayColumns" class="checkbox-scroll-area">
                 </div>
             </div>
-            
         </div>
         
         <div id="check-type-group" class="control-section">
@@ -69,6 +68,36 @@
                 <div id="nullOptions" class="option-details">
                     대상 컬럼: <select id="nullColumn"></select>
                 </div>
+            </div>
+			<div class="radio-option-group">
+                <input type="radio" id="radioLimit" name="checkType" value="limitCheck">
+                등급 제한 검증
+				<div id="limitOptions" class="option-details">
+					평가 유형 선택:<select id="limitTypeSelect">
+						<option value="none" selected disabled>--- 선택 ---</option>
+						<option value="RE1">상대평가1 (A그룹 30%, B그룹 80%)</option>
+						<option value="RE2">상대평가2 (A그룹 50%)</option>
+						<option value="passfail">패논패 (P/NP)</option>
+					</select>
+					<button id="toggleCustomLimitBtn">
+						직접 설정하기<span id="customLimitIcon">▶</span>
+					</button>
+					<br>
+					<div id="customLimitSettings">
+						<p><strong>그룹별 제한 비율 (%)</strong></p>
+						<div id="customLimitList">
+							</div>
+						<div class="input-add-group">
+							그룹: <select id="limitGroup">
+								<option value="A_Group">A그룹 (A+, A0)</option>
+								<option value="B_Group">B그룹 (B+, B0)</option>
+								<option value="Other_Group">그 외 그룹(나머지)</option>
+							</select>
+							 비율 (%): <input type="number" id="limitValue" min="0" max="100" placeholder="0 ~ 100">
+							<button id="addLimitBtn">추가</button>
+						</div>
+					</div>
+				</div>
             </div>
         </div>
     </div>
