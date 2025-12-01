@@ -30,7 +30,15 @@ const DEFAULT_FILTER_SUBJECT_AE = [
 	'이름', '학번', '학과', '재수강', 'FINAL_SCORE', 'FINAL_GRADE'
 ];
 
-// 예시: 250명 초과 시 버튼 비활성화
+// 예시: 150명 초과 시 버튼 비활성화
 const MAX_STUDENTS_FOR_SINGLE_CLASS = 150;
 
+const RE1_CUT = {
+    'A_Group': 30, // A+, A0 누적 30% 이하
+    'B_Group': 80  // B+, B0 누적 80% 이하
+};
 
+const RE2_CUT = {
+    'A_Group': 50, // A+, A0 누적 50% 이하
+	'B_Group': 100  // B+, B0 누적 100% (제한없음)
+};
