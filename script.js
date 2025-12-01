@@ -22,6 +22,9 @@ const filterToggleIcon = document.getElementById('filterToggleIcon');//친구
 const distributionToggleIcon = document.getElementById("distributionToggleIcon");
 const toggleColumnsBtn = document.getElementById('toggleColumnsBtn');
 const ColumnsToggleIcon = document.getElementById('ColumnsToggleIcon');
+const toggleCustomLimitBtn = document.getElementById('toggleCustomLimitBtn');
+const customLimitSettings = document.getElementById('customLimitSettings');
+const customLimitIcon = document.getElementById('customLimitIcon');
 // 예상 등급을 저장할 임시 컬럼 이름 정의
 const EXPECTED_GRADE_COLUMN = 'EXPECTED_GRADE_TEMP';
 const errorToggle = document.getElementById("errorToggle"); //오류 행만 보기 토글
@@ -36,8 +39,16 @@ let gradeCutoff = DEFAULT_GRADE_CUTOFF;
 const gradeCutSettings = document.getElementById("gradeCutSettings"); 
 let allRows = []; // 전체 데이터를 담을 배열
 
-// let allColumnKeys = []; // 🚨 초기 선언 제거 (데이터 로드 시점에 추출)
-// let uniqueSubjects = []; // 🚨 제거됨
+let customLimits = []; 
+const A_GROUP_KEY = 'A_Group'; 
+const B_GROUP_KEY = 'B_Group'; 
+const OTHER_GROUP_KEY = 'Other_Group';
+
+const limitTypeSelect = document.getElementById('limitTypeSelect'); // 평가 유형 (RE1/RE2) 선택
+const limitGroupSelect = document.getElementById('limitGroup'); // 제한 그룹 (A/B) 선택
+const limitValueInput = document.getElementById('limitValue'); // 제한 비율 입력 필드
+const addLimitBtn = document.getElementById('addLimitBtn'); // 제한 추가 버튼
+const customLimitList = document.getElementById('customLimitList'); // 제한 목록 표시 컨테이너
 
 let filterOptions = {};// 모든 컬럼의 필터 데이터 (유니크 값)
 let activeFilters = {};// 현재 적용된 필터 조건 {컬럼명: ['값1', '값2'], ...}
@@ -60,6 +71,9 @@ if (distributionDetailContainer && distributionToggleIcon && toggleDistributionB
 }
 if (displayColumns && ColumnsToggleIcon) {
     displayColumns.classList.add('columns-hidden');
+}
+if (toggleCustomLimitBtn && customLimitSettings && customLimitIcon) {
+    customLimitSettings.classList.add('distribution-hidden');
 }
 // =================================================================
 // 2. 멀티 셀렉트 필터링 로직
@@ -432,11 +446,19 @@ checkBtn.addEventListener("click", () => {
     isErrorFilterOn = errorToggle ? errorToggle.checked : false;
 
     let rows = currentFilteredRows; // ✅ 현재 필터링된 데이터를 사용
-
     const checkType = document.querySelector("input[name='checkType']:checked");
+    
+    // 전역 변수에서 customLimits (사용자가 설정/자동 로드된 제한 비율) 가져옴
+    const currentCustomLimits = customLimits; 
 
     if (rows.length === 0) {
         alert("검증 대상 데이터가 없습니다. 파일을 로드하고 필터링 상태를 확인해주세요.");
+        return;
+    }
+
+    // 등급 제한 검증 시, 제한 비율이 설정되어 있어야 함
+    if (checkType.value === "limitCheck" && currentCustomLimits.length === 0) {
+        alert("등급 제한 검증을 위해서는 '평가 유형 선택' 또는 '직접 설정하기'를 통해 제한 비율을 설정해야 합니다.");
         return;
     }
 
@@ -475,7 +497,7 @@ checkBtn.addEventListener("click", () => {
     const gradeCol = gradeColumn.value; // 등급 컬럼 키
     const nullCol = nullColumn ? nullColumn.value : null; // 널값 검사용 컬럼 키 (필요 시)
 
-    // --- 4. 데이터 검증 루프 ---
+    // --- 4. 데이터 검증 루프 (개별 행 검증 및 통계 수집) ---
     rows.forEach(row => {
         let isError = false;
         row[EXPECTED_GRADE_COLUMN] = '';
@@ -491,7 +513,7 @@ checkBtn.addEventListener("click", () => {
             }
         }
 
-        // B. 검증 실행 (분리된 함수 호출)
+        // B. 개별 검증 실행
         if (checkType.value === "gradeCheck") {
             const gradeCheckResult = runGradeCheck(row, gradeCol, scoreCol, gradeCutoff);
             
@@ -500,30 +522,49 @@ checkBtn.addEventListener("click", () => {
 
             if (gradeCheckResult.isScoreInvalid) {
                 // 점수 오류인 경우, 이미 카운트된 원본 등급 카운터를 조정하고 오류 카운트를 증가시킵니다.
-                // (선택 사항이지만, 분포율 통계의 정확도를 높일 수 있습니다.)
                 if (gradeCol && originalGrade && gradeCounts.hasOwnProperty(originalGrade)) {
-                    gradeCounts[originalGrade]--; // 원본 등급 카운트에서 제외
+                    gradeCounts[originalGrade]--; 
                 }
                 gradeCounts['점수 오류/누락']++;
             }
-        } 
+        } 
         
         if (checkType.value === "notNull") {
             if (nullCol && runNotNullCheck(row, nullCol)) {
                 isError = true;
             }
         }
-		//---새로운 검증이 들어올 자리
-		
-		//---
-
+        
+        // 'limitCheck'는 집단 검증이므로 개별 행 루프에서는 오류 플래그를 설정하지 않습니다.
+        
         if (isError) {
             errorRowsToExport.push(row);
         }
     });
-
-    // --- 5. 요약 통계 업데이트 ---
-    updateSummaryPanel(rows.length, errorRowsToExport.length);
+    
+    // --- 4.1. 집단 검증 실행 (등급 제한 검증) ---
+    if (checkType.value === "limitCheck") {
+        const totalStudents = rows.length;
+        const limitCheckResult = runLimitCheck(gradeCounts, totalStudents, currentCustomLimits);
+          
+        // 등급 제한 검증 시에는 개별 행 오류가 없으므로 오류 내보내기 배열을 비워둡니다.
+        errorRowsToExport = []; 
+        
+        // 💡 변경: 등급 제한 검증 결과는 전용 요약 함수로 처리하여 summaryPanel에 표시합니다.
+        // (이 함수는 이전에 제가 제공해 드린 renderLimitCheckSummary여야 합니다.)
+        renderLimitCheckSummary(limitCheckResult.isLimitError, limitCheckResult.errorDetails);
+    
+    // 💡 추가: 등급 제한 검증이 아닐 경우 (gradeCheck, notNull) 기존 요약 함수를 호출합니다.
+    } else {
+        // --- 5. 요약 통계 업데이트 --- (Grade Check 또는 Not Null Check)
+        updateSummaryPanel(rows.length, errorRowsToExport.length);
+        
+        // Limit Check 전용 요약을 사용하지 않으므로 summaryPanel 클래스를 초기화합니다.
+        const summaryPanel = document.getElementById('summaryPanel');
+        if (summaryPanel) {
+            summaryPanel.classList.remove('limit-check-error', 'limit-check-ok');
+        }
+    }
 
     // --- 6. 등급 분포율 계산 및 렌더링 ---
     const totalStudents = rows.length;
@@ -539,6 +580,7 @@ checkBtn.addEventListener("click", () => {
         currentSortDirection = 'asc';
     }
 
+    // 등급 제한 검증 시에는 모든 행을 결과 테이블에 표시합니다.
     renderResultTable(rows, selectedColumns, checkType.value);
 });
 //---------------------------------------------
@@ -610,6 +652,73 @@ function runGradeCheck(row, gradeCol, scoreCol, gradeCutoff) {
 function runNotNullCheck(row, col) {
     const val = row[col];
     return (val === null || val === "");
+}
+//
+// 설정된 그룹별 제한 비율에 대해 전체 학생의 등급 분포를 검증합니다.
+//@param {object} counts - 현재 계산된 등급 카운트 (gradeCounts)
+//@param {number} total - 전체 학생 수
+//@param {Array<object>} limits - 설정된 제한 비율 목록 (customLimits)
+//@returns {object} { isLimitError: boolean, errorMessage: string, errorDetails: Array }
+//
+function runLimitCheck(counts, total, limits) {
+    let isLimitError = false;
+    let errorMessage = "다음과 같은 등급 제한 위반이 발생했습니다:\n";
+    const errorDetails = []; // 💡 추가: 상세 오류 정보를 담을 배열
+
+    // 0. 유효성 검사
+    if (limits.length === 0 || total === 0) {
+        return { isLimitError: false, errorMessage: '', errorDetails: [] };
+    }
+    
+    // 1. 그룹별 현재 누적 등급 수를 계산합니다.
+    const cumulativeCounts = {
+        'A_Group': (counts['A+'] || 0) + (counts['A0'] || 0), 
+        'B_Group': (counts['B+'] || 0) + (counts['B0'] || 0)
+    };
+
+    // 2. 설정된 제한 사항을 순회하며 검증합니다.
+    limits.forEach(limit => {
+        const requiredPercent = limit.maxPercent;
+        const groupKey = limit.group;
+        let currentCount = 0;
+        let groupName = '';
+
+        if (groupKey === 'A_Group') {
+            currentCount = cumulativeCounts['A_Group'];
+            groupName = 'A 그룹 (A+/A0)';
+        
+        } else if (groupKey === 'B_Group') {
+            // 💡 수정: B 그룹 단독 카운트를 사용합니다.
+            currentCount = cumulativeCounts['B_Group']; 
+            groupName = 'B 그룹 (B+/B0)'; 
+            
+        } else {
+             // 기타 그룹은 건너뜁니다.
+             return; 
+        }
+
+        // 현재 비율 계산 (소수점 정밀도를 위해 100을 곱함)
+        const currentPercent = (currentCount / total) * 100;
+
+        // 제한 비율 초과 검사
+        if (currentPercent > requiredPercent) {
+            isLimitError = true;
+            errorMessage += `- ${groupName}: 현재 ${currentPercent.toFixed(1)}% (제한: ${requiredPercent}%) 초과\n`;
+            
+            // 💡 상세 정보 배열에 구조화하여 추가
+            errorDetails.push({
+                groupName: groupName,
+                currentPercent: currentPercent,
+                requiredPercent: requiredPercent
+            });
+        }
+    });
+
+    return { 
+        isLimitError: isLimitError, 
+        errorMessage: isLimitError ? errorMessage : '',
+        errorDetails: errorDetails // 💡 최종 결과에 포함
+    };
 }
 // -----------------------------
 // CSV 저장 버튼 이벤트 리스너
@@ -974,6 +1083,8 @@ setupGeneralToggle(toggleFilterBtn, dynamicFilterWrapper, filterToggleIcon, 'fil
 setupGeneralToggle(toggleDistributionBtn, distributionDetailContainer, distributionToggleIcon, 'distribution-hidden', 'toggled');
 //표시할 컬럼 토글 설정
 setupGeneralToggle(toggleColumnsBtn, displayColumns, ColumnsToggleIcon, 'columns-hidden');
+//제한 검증 토글 설정
+setupGeneralToggle(toggleCustomLimitBtn, customLimitSettings, customLimitIcon, 'distribution-hidden');
 
 //===============================================================================
 // 등급 분포 토글 버튼의 활성화 상태 제어
@@ -1052,5 +1163,148 @@ function updateGradeDistributionButton() {
         // 버튼 비활성화 시 상세 컨테이너는 닫아둡니다.
         distributionDetailContainer.classList.add('distribution-hidden');
         distributionToggleIcon.innerHTML = '▶';
+    }
+}
+/**
+ * 현재 customLimits 배열의 내용을 HTML 목록으로 렌더링합니다.
+ */
+function renderCustomLimits() {
+    if (!customLimitList) return;
+
+    customLimitList.innerHTML = '';
+    
+    // customLimits 배열에 아무것도 없으면 기본 메시지를 표시합니다.
+    if (customLimits.length === 0) {
+        customLimitList.innerHTML = '<p class="text-muted">설정된 제한 비율이 없습니다.</p>';
+        return;
+    }
+
+    customLimits.forEach((limit, index) => {
+        const item = document.createElement('div');
+        item.className = 'custom-limit-item';
+        // 표시용 그룹 이름 설정
+        const groupName = limit.group === A_GROUP_KEY ? 'A 그룹 (A+/A0)' : 
+                          limit.group === B_GROUP_KEY ? 'B 그룹 (B+/B0)' : limit.group;
+
+        item.innerHTML = `
+            <span>${groupName}: 최대 ${limit.maxPercent}%</span>
+            <button class="btn-remove-limit" data-index="${index}">삭제</button>
+        `;
+        customLimitList.appendChild(item);
+    });
+
+    // 삭제 버튼 이벤트 리스너 연결
+    customLimitList.querySelectorAll('.btn-remove-limit').forEach(button => {
+        button.addEventListener('click', (event) => {
+            const index = parseInt(event.target.dataset.index);
+            removeCustomLimit(index);
+        });
+    });
+}
+
+/**
+ * 사용자가 입력한 제한 비율을 customLimits에 추가합니다.
+ */
+function addCustomLimit() {
+    const group = limitGroupSelect.value;
+    const value = parseFloat(limitValueInput.value);
+
+    if (!group || isNaN(value) || value <= 0 || value > 100) {
+        alert("그룹을 선택하고 1% ~ 100% 사이의 유효한 비율을 입력해주세요.");
+        return;
+    }
+    
+    // 중복 방지: 이미 해당 그룹에 대한 제한이 있으면 덮어씁니다.
+    const existingIndex = customLimits.findIndex(limit => limit.group === group);
+
+    if (existingIndex !== -1) {
+        // 기존 항목을 업데이트
+        customLimits[existingIndex] = { group: group, maxPercent: value };
+    } else {
+        // 새 항목 추가
+        customLimits.push({ group: group, maxPercent: value });
+    }
+    
+    // 입력 필드 초기화 및 목록 갱신
+    limitValueInput.value = '';
+    renderCustomLimits();
+    alert(`제한 비율이 설정되거나 업데이트되었습니다. (${group}: 최대 ${value}%)`);
+}
+
+/**
+ * customLimits 배열에서 지정된 인덱스의 항목을 제거합니다.
+ */
+function removeCustomLimit(index) {
+    if (index >= 0 && index < customLimits.length) {
+        customLimits.splice(index, 1);
+        renderCustomLimits();
+        alert("제한 비율이 삭제되었습니다.");
+    }
+}
+// -----------------------------
+// 등급 제한 설정 이벤트 리스너
+// -----------------------------
+if (addLimitBtn) {
+    addLimitBtn.addEventListener('click', addCustomLimit);
+}
+
+// -----------------------------
+// 평가 유형(RE1/RE2) 선택 시 기본 제한 로드 이벤트 리스너 추가
+// -----------------------------
+if (limitTypeSelect) {
+    limitTypeSelect.addEventListener('change', () => {
+        const selectedType = limitTypeSelect.value;
+        let limitsToLoad = null;
+
+        // HTML의 value가 RE1/RE2로 수정되었다고 가정합니다.
+        if (selectedType === 'RE1') {
+            limitsToLoad = RE1_CUT;
+        } else if (selectedType === 'RE2') {
+            limitsToLoad = RE2_CUT;
+        }
+
+        customLimits = [];
+        if (limitsToLoad) {
+            for (const groupKey in limitsToLoad) {
+                customLimits.push({ group: groupKey, maxPercent: Number(limitsToLoad[groupKey]) });
+            }
+            // 이 시점에서 customLimits에 값이 채워지므로 검증이 가능해집니다.
+            renderCustomLimits(); // 목록 UI 갱신 (만약 renderCustomLimits 함수가 정의되어 있다면)
+        } 
+    });
+}
+
+// -----------------------------
+// 초기 상태 렌더링 (파일 로드 전에 호출 가능)
+// -----------------------------
+renderCustomLimits();
+
+/**
+ * 등급 제한 검증 결과 요약을 summaryPanel에 렌더링합니다.
+ * @param {boolean} isError - 제한 위반 오류 발생 여부
+ * @param {Array<object>} errorDetails - {groupName, currentPercent, requiredPercent} 배열
+ */
+function renderLimitCheckSummary(isError, errorDetails) {
+    const summaryPanel = document.getElementById('summaryPanel');
+    if (!summaryPanel) return;
+    
+    summaryPanel.classList.remove('limit-check-error', 'limit-check-ok'); // 클래스 초기화
+
+    if (isError) {
+        let errorHtml = `✅ 등급 제한 위반 발생: `;
+        
+        errorDetails.forEach(detail => {
+            errorHtml += `
+                <span style="font-weight:bold; color:red;">[${detail.groupName}]</span> 
+                현재: ${detail.currentPercent.toFixed(1)}% (기준: ${detail.requiredPercent.toFixed(1)}%)
+            `;
+        });
+        
+        summaryPanel.innerHTML = errorHtml;
+        summaryPanel.classList.add('limit-check-error');
+        
+    } else {
+        summaryPanel.innerHTML = '<strong>✅ 등급 제한 검증 결과:</strong> 모든 설정된 제한 기준을 충족합니다.';
+        summaryPanel.classList.add('limit-check-ok');
     }
 }
