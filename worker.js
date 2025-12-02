@@ -1,20 +1,5 @@
 importScripts("https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js");
-// -----------------------------------------------------------
-// [Worker 내부 상수 정의] (기본값.js 내용 포함)
-// -----------------------------------------------------------
-const DEFAULT_SCORE_COLUMN_KEY = 'FINAL_SCORE';
-const DEFAULT_GRADE_COLUMN_KEY = 'FINAL_GRADE';
-
-const DEFAULT_FILTER_COLUMNS = [
-    'COURSE_CODE', 'SECTION', 'USER_LOGIN', 'FINAL_SCORE', 'FINAL_GRADE'
-];
-const DEFAULT_FILTER_SUBJECT_RE = [
-    '이름', '학번', '학과', '재수강', '상대평가_제외', 'FINAL_SCORE', 'FINAL_GRADE'
-];
-const DEFAULT_FILTER_SUBJECT_AE = [
-    '이름', '학번', '학과', '재수강', 'FINAL_SCORE', 'FINAL_GRADE'
-];
-
+importScripts('./기본값.js');
 // -----------------------------------------------------------
 // [Worker 내부 함수 정의] cleanHeader
 // -----------------------------------------------------------
@@ -176,3 +161,4 @@ self.onmessage = function(e) {
         self.postMessage({ success: false, error: "파일 로드 시작 중 오류: " + err.message });
     }
 };
+
