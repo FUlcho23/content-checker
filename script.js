@@ -36,7 +36,7 @@ let currentSortColumn = null;
 let currentSortDirection = 'asc'; 
 let errorRowsToExport = []; 
 let gradeCutoff = DEFAULT_GRADE_CUTOFF;
-const gradeCutSettings = document.getElementById("gradeCutSettings"); 
+
 let allRows = []; // 전체 데이터를 담을 배열
 
 let customLimits = []; 
@@ -77,10 +77,6 @@ let filterOptions = {};// 모든 컬럼의 필터 데이터 (유니크 값)
 let activeFilters = {};// 현재 적용된 필터 조건 {컬럼명: ['값1', '값2'], ...}
 
 let isErrorFilterOn = false; //오류 행만 보기 꺼짐 상태
-// -----------------------------
-// 초기 실행 로직
-// -----------------------------
-renderGradePercentUI();
 // -----------------------------
 // 초기 상태 설정 (script.js 파일 상단)
 // -----------------------------
@@ -228,141 +224,6 @@ function applyAllFilters() {
 // 3. 데이터 로드 및 이벤트 리스너 (멀티 셀렉트와 연동)
 // =================================================================
 // -----------------------------
-// 데이터 로드 버튼 이벤트 리스너
-// -----------------------------
-/*
-loadDataBtn.addEventListener('click', () => {
-    const files = fileInput.files;
-    if (files.length === 0) {
-        alert("업로드할 파일을 선택해주세요 (Excel 또는 CSV).");
-        return;
-    }
-    
-    const file = files[0];
-    const reader = new FileReader();
-
-    reader.onload = function(e) {
-        try {
-            const data = new Uint8Array(e.target.result);
-            
-            // ✅ XLSX.read 옵션: 수식, 매크로, 외부 링크 무시 (가장 강력한 설정)
-            const workbook = XLSX.read(data, { 
-                type: 'array',
-                formulas: false, 
-                sheets: 0, 
-                bookVBA: false, 
-                bookExt: false
-            });
-            
-            const sheetName = workbook.SheetNames[0];
-            const worksheet = workbook.Sheets[sheetName];
-            
-            // ✅ sheet_to_json 옵션: 계산된 최종 텍스트 값 사용 (수식 결과 로드)
-            const jsonRows = XLSX.utils.sheet_to_json(worksheet, {
-                header: 1, 
-                raw: false,
-                defval: null,
-                cellDates: true, 
-                cellText: true,
-                cellNF: false
-            });
-
-            if (jsonRows.length < 2) {
-                alert("데이터가 없습니다. 헤더와 최소 1개의 행이 필요합니다.");
-                return;
-            }
-            
-            const fileHeaders = jsonRows[0];
-            
-            const cleanedKeys = fileHeaders.map(header => cleanHeader(header));
-
-            allRows = jsonRows.slice(1).map(row => {
-                const obj = {};
-                
-                // 정리된 키(cleanedKeys)의 인덱스를 기준으로 데이터를 읽어옵니다.
-                cleanedKeys.forEach((cleanedKey, index) => {
-                    const originalValue = row[index];
-                    
-                    // 1. 정리된 키가 유효하고 (null이 아니며), 2. 해당 인덱스에 데이터가 존재하면 객체화
-                    if (cleanedKey && originalValue !== undefined) { 
-                        obj[cleanedKey] = originalValue;
-                    }
-                });
-                return obj;
-            }).filter(obj => Object.keys(obj).length > 0);
-            
-            const allFileColumns = allRows.length > 0 ? Object.keys(allRows[0]) : [];
-			let filterColumnsToUse;
-			let scoreKeyFound = allFileColumns.includes(DEFAULT_SCORE_COLUMN_KEY);
-			let gradeKeyFound = allFileColumns.includes(DEFAULT_GRADE_COLUMN_KEY);
-
-			if (!scoreKeyFound || !gradeKeyFound) {
-				//케이스 0: 필수 점수/등급 키가 없으면 무조건 전체 컬럼 사용
-				filterColumnsToUse = allFileColumns;
-				targetScoreKey = ''; 
-				targetGradeKey = ''; 
-				
-				alert(`경고: 기본 컬럼 키 (${DEFAULT_SCORE_COLUMN_KEY}, ${DEFAULT_GRADE_COLUMN_KEY})가 파일에 없습니다. 점수/등급 컬럼을 직접 선택하고 필터링할 컬럼을 모두 사용합니다.`);
-
-			} else {
-				// 1. DEFAULT_FILTER_COLUMNS (5개) 모두 존재 여부
-				const hasAllDefault = DEFAULT_FILTER_COLUMNS.every(key => allFileColumns.includes(key));
-
-				// 2. DEFAULT_FILTER_SUBJECT_RE (7개) 모두 존재 여부
-				const hasAllSubjectRE = DEFAULT_FILTER_SUBJECT_RE.every(key => allFileColumns.includes(key));
-
-				// 3. DEFAULT_FILTER_SUBJECT_AE (6개) 모두 존재 여부
-				const hasAllSubjectAE = DEFAULT_FILTER_SUBJECT_AE.every(key => allFileColumns.includes(key));
-
-
-				if (hasAllDefault) {
-					// ✅ 우선순위 1
-					filterColumnsToUse = DEFAULT_FILTER_COLUMNS;
-					
-				} else if (hasAllSubjectRE) {
-					// ✅ 우선순위 2
-					filterColumnsToUse = DEFAULT_FILTER_SUBJECT_RE;
-					
-				} else if (hasAllSubjectAE) {
-					// ✅ 우선순위 3
-					filterColumnsToUse = DEFAULT_FILTER_SUBJECT_AE;
-					
-				} else {
-					// ✅ 우선순위 4 (모두 실패)
-					filterColumnsToUse = allFileColumns;
-				}
-
-				// 필수 키가 존재하므로 기본값 설정
-				targetScoreKey = DEFAULT_SCORE_COLUMN_KEY;
-				targetGradeKey = DEFAULT_GRADE_COLUMN_KEY;
-			}
-            // 3. 컬럼 목록 갱신 및 필터 생성 (결정된 목록 사용)
-			renderColumnsOnce(allFileColumns); // 표시 컬럼은 항상 전체 컬럼 사용
-			createDynamicFilters(filterColumnsToUse);
-            // 3. 파일 이름 표시
-            fileNameDisplay.innerHTML = `현재 파일: ${file.name}`;
-
-            alert(`${file.name} 파일에서 ${allRows.length}개의 데이터 행을 성공적으로 로드했습니다.`);
-
-        } catch (error) {
-            console.error("파일 처리 중 치명적인 오류 발생:", error);
-            // 🚨 최종 에러 메시지: 수동 변환 가이드 포함
-            alert(
-                "⚠️ 파일을 로드하는 중 심각한 오류가 발생했습니다.\n\n" +
-                "이 오류는 파일 파싱 단계에서 발생하며, 파일 내의 '수식(함수)', '외부 링크', 또는 '손상된 형식' 때문입니다.\n\n" +
-                "**✅ 해결책:** 파일을 Excel에서 열고, 모든 데이터를 복사하여 **'값만 붙여넣기'** 후, 새로운 파일로 저장하여 다시 업로드해주세요."
-            );
-        }
-    };
-
-    reader.onerror = function() {
-        alert("파일 읽기 오류가 발생했습니다.");
-    };
-	updateGradeDistributionButton();
-    reader.readAsArrayBuffer(file);
-});
-*/
-// -----------------------------
 // 토글 로직 추가
 // -----------------------------
 errorToggle.addEventListener("change", () => {
@@ -423,44 +284,6 @@ function handleHeaderClick(columnName) {
         // 3. 작업 완료 후 로딩 숨김
         hideLoading(); 
     }, 0);
-}
-
-// -----------------------------
-// 등급 비율 설정 UI 생성 함수
-// -----------------------------
-function renderGradePercentUI() {
-    if (!gradeCutSettings) {
-        console.error("등급 비율 설정 컨테이너(ID: gradeCutSettings)를 찾을 수 없습니다. HTML을 확인하세요.");
-        return;
-    }
-    gradeCutSettings.innerHTML = "<h4>⬇️ 현재 등급별 목표 비율 (%)</h4>";
-    
-    const percentGrades = [
-        { key: 'A', label: 'A+/A' },
-        { key: 'B', label: 'B+/B' }
-    ];
-
-    percentGrades.forEach(gradeGroup => {
-        const inputGroup = document.createElement("div");
-        inputGroup.className = "grade-input-group grade-percent-group";
-        
-        const label = document.createElement("label");
-        label.textContent = `${gradeGroup.label} 목표 비율: `;
-        label.style.fontWeight = 'bold'; 
-
-        const valueSpan = document.createElement("span");
-        const currentValue = gradePercentCutoff[gradeGroup.key] || 0;
-        valueSpan.textContent = currentValue; 
-        
-        const percentUnit = document.createElement("span");
-        percentUnit.textContent = "%";
-        percentUnit.style.marginLeft = '3px';
-
-        inputGroup.appendChild(label);
-        inputGroup.appendChild(valueSpan); 
-        inputGroup.appendChild(percentUnit);
-        gradeCutSettings.appendChild(inputGroup);
-    });
 }
 
 // -----------------------------
@@ -1432,10 +1255,133 @@ loadDataBtn.addEventListener('click', () => {
     showLoading();
 
     // 2. Worker에게 파일 전달 (무거운 작업 시작)
-    // 메인 스레드는 즉시 해방되어 로딩 스피너가 부드럽게 돌아갑니다.
     excelWorker.postMessage({ file: file });
 });
+//=================================================================
+//csv파일로 다운로드 하기(전체,에러값만)
+//=================================================================
+// -----------------------------
+// 다운로드에 필요한 파라미터를 준비하는 모듈화 함수
+// -----------------------------
+/**
+ * 다운로드 유형에 따라 데이터, 컬럼, 파일명 접두사를 준비합니다.
+ * @param {'ALL' | 'ERROR'} type - 다운로드 유형
+ * @returns {{ dataToExport: Array<object>, finalExportColumns: Array<string>, fileNamePrefix: string } | null}
+ */
+function prepareDownloadParameters(type) {
+    const selectedColumns = [...displayColumns.querySelectorAll("input:checked")].map(cb => cb.value);
+    const currentCheckType = document.querySelector("input[name='checkType']:checked")?.value;
 
+    let dataToExport;
+    let fileNamePrefix;
+
+    if (type === 'ERROR') {
+        dataToExport = errorRowsToExport;
+        fileNamePrefix = '검증결과_오류내역';
+        
+        if (dataToExport.length === 0) {
+            alert("저장할 오류 데이터가 없습니다. 검증 결과에 오류가 없거나, 아직 검증을 실행하지 않았습니다.");
+            return null;
+        }
+
+    } else if (type === 'ALL') {
+        dataToExport = allRows; // 검증 루프를 거친 전체 데이터
+        fileNamePrefix = '검증결과_전체파일';
+        
+        if (dataToExport.length === 0) {
+            alert("검증된 전체 데이터가 없습니다. 파일을 로드하고 검증을 실행했는지 확인해주세요.");
+            return null;
+        }
+    } else {
+        return null; // 유효하지 않은 유형
+    }
+
+    let finalExportColumns = [...selectedColumns];
+    
+    // 등급 검증 시에만 예상 등급 컬럼 추가
+    if (currentCheckType === 'gradeCheck') {
+        finalExportColumns.push(EXPECTED_GRADE_COLUMN);
+    }
+    
+    return { dataToExport, finalExportColumns, fileNamePrefix };
+}
+// -----------------------------
+// 범용 CSV 다운로드 실행 함수
+// -----------------------------
+/**
+ * 데이터를 CSV로 변환하여 다운로드합니다.
+ * @param {Array<object>} dataToExport - CSV로 만들 데이터 행 배열
+ * @param {Array<string>} columns - CSV에 포함할 컬럼 키 배열
+ * @param {string} fileNamePrefix - 파일명 접두사 (예: '전체결과' 또는 '오류내역')
+ */
+function downloadCsv(dataToExport, columns, fileNamePrefix) {
+    if (dataToExport.length === 0) {
+        alert("내보낼 데이터가 없습니다.");
+        return;
+    }
+    
+    // 1. CSV 내용 구성 
+    let csv = [];
+    
+    const headers = columns.map(col => {
+        const headerName = (col === EXPECTED_GRADE_COLUMN) ? '예상 등급' : col;
+        return '"' + headerName.replace(/"/g, '""') + '"';
+    });
+    csv.push(headers.join(','));
+
+    dataToExport.forEach(row => {
+        const rowData = columns.map(col => {
+            let cellData = row[col] === null || row[col] === undefined ? "" : String(row[col]);
+            return '"' + cellData.replace(/"/g, '""') + '"';
+        });
+        csv.push(rowData.join(','));
+    });
+
+    const csvString = csv.join('\n');
+
+    // 2. 다운로드 실행
+    // CSV 파일에 BOM(Byte Order Mark) 추가하여 Excel에서 한글 깨짐 방지
+    const blob = new Blob(["\ufeff" + csvString], { type: 'text/csv;charset=utf-8' }); 
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+
+    const now = new Date();
+    // 파일명에 날짜/시간 추가
+    const dateString = `${now.getMonth()+1}-${now.getDate()}_${now.getHours()}${now.getMinutes()}`; 
+    
+    a.href = url;
+    a.download = `${fileNamePrefix}_${dateString}.csv`; 
+
+    document.body.appendChild(a);
+    a.click();
+    
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    alert(`CSV 파일 다운로드를 시작합니다: ${a.download}`);
+}
+// -----------------------------
+// 1. 오류 행만 CSV 저장 버튼 이벤트 리스너 (간소화)
+// -----------------------------
+document.getElementById("saveErrorCsvBtn")?.addEventListener("click", () => {
+    const params = prepareDownloadParameters('ERROR');
+    
+    if (params) {
+        downloadCsv(params.dataToExport, params.finalExportColumns, params.fileNamePrefix);
+    }
+});
+
+
+// -----------------------------
+// 2. 전체 데이터 CSV 저장 버튼 이벤트 리스너 (간소화)
+// -----------------------------
+document.getElementById("saveAllCsvBtn")?.addEventListener("click", () => {
+    const params = prepareDownloadParameters('ALL');
+    
+    if (params) {
+        downloadCsv(params.dataToExport, params.finalExportColumns, params.fileNamePrefix);
+    }
+});
 
 
 
