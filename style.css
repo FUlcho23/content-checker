@@ -714,9 +714,9 @@ Select2 드롭다운 고정 문제 해결
 #customLimitList {
     margin-top: 12px;
     padding: 14px 16px;
-    border: 1px solid #e3e3e3;  
+    border: 1px solid #e3e3e3;  /* 은은한 연한 회색 */
     border-radius: 8px;
-    background-color: #fafafa; 
+    background-color: #fafafa;  /* 약한 회백색 */
     box-shadow: 0 1px 2px rgba(0,0,0,0.03);
 }
 
@@ -728,7 +728,7 @@ Select2 드롭다운 고정 문제 해결
     padding: 9px 4px;
     border-bottom: 1px solid #ededed;
     font-size: 0.93em;
-    color: #444; 
+    color: #444; /* 너무 진하지 않고, 너무 연하지 않은 중간톤 */
 }
 
 .custom-limit-item:last-child {
@@ -737,7 +737,7 @@ Select2 드롭다운 고정 문제 해결
 
 /* 삭제 버튼 - 저채도 톤 */
 .btn-remove-limit {
-    background-color: #d87777;
+    background-color: #d87777; /* 채도 낮춘 muted red */
     color: white;
     padding: 4px 10px;
     font-size: 0.82em;
@@ -750,9 +750,38 @@ Select2 드롭다운 고정 문제 해결
 }
 
 .btn-remove-limit:hover {
-    background-color: #c46b6b;
+    background-color: #c46b6b; /* 조금 더 진하지만 여전히 저채도 */
 }
 
 .btn-remove-limit:active {
     transform: scale(0.97);
+}
+/* style.css 파일에 추가 */
+#loading {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.8); /* 반투명 흰색 배경 */
+    display: none; /* ⚠️ 기본적으로 숨김 */
+    justify-content: center;
+    align-items: center;
+    z-index: 9999; /* 다른 요소 위에 표시 */
+    flex-direction: column;
+}
+
+#loadingSpinner {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #3498db; /* 스피너 색상 */
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    animation: spin 1s linear infinite; /* 회전 애니메이션 */
+    margin-bottom: 10px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
