@@ -10,7 +10,6 @@ const resultTableHead = document.querySelector("#resultTable thead tr");
 const resultTableBody = document.querySelector("#resultTable tbody");
 const distributionDetailContainer = document.getElementById('gradeDistributionDetail');
 const fileInput = document.getElementById("fileInput");
-const loadDataBtn = document.getElementById("loadDataBtn");
 const fileNameDisplay = document.getElementById("fileNameDisplay");
 //토글모음
 const toggleDistributionBtn = document.getElementById('toggleDistributionBtn');
@@ -1180,21 +1179,23 @@ excelWorker.onerror = function(error) {
 };
 
 // =================================================================
-// 데이터 로드 버튼 이벤트 리스너(loadDataBtn) - worker.js를 사용
+// 파일을 선택하거나 변경하면 즉시 로드 시작
 // =================================================================
-loadDataBtn.addEventListener('click', () => {
+fileInput.addEventListener('change', () => {
     const files = fileInput.files;
+
+    // 파일 선택 창에서 취소되면 아무것도 하지 않습니다.
     if (files.length === 0) {
-        alert("업로드할 파일을 선택해주세요 (Excel 또는 CSV).");
         return;
     }
     
     const file = files[0];
     
-    // 1. 로딩 표시 (UI 멈춤 방지용 스피너)
+    // 1. 로딩 표시
     showLoading();
 
-    // 2. Worker에게 파일 전달 (무거운 작업 시작)
+    // 2. Worker에게 파일 전달 (비동기 처리 시작)
+    // 메인 스레드는 즉시 해방됩니다.
     excelWorker.postMessage({ file: file });
 });
 //=================================================================
@@ -1322,6 +1323,7 @@ document.getElementById("saveAllCsvBtn")?.addEventListener("click", () => {
         downloadCsv(params.dataToExport, params.finalExportColumns, params.fileNamePrefix);
     }
 });
+
 
 
 
