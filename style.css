@@ -461,26 +461,6 @@ Select2 스타일
 #file-upload-controls label[for="fileInput"]:hover { background: #1f5bf0; }
 #fileInput { display: none; }
 
-#loadDataBtn {
-    background: #4c5cff;
-    color: white;
-    border: none;
-    padding: 10px 16px;
-    border-radius: 8px;
-    font-size: 14px;
-    cursor: pointer;
-    transition: 0.2s;
-}
-
-#loadDataBtn:hover { background: #3f4dea; }
-
-#fileNameDisplay {
-    font-size: 13px;
-    color: #333;
-    padding: 2px 6px;
-    margin-left: 4px;
-}
-
 #customLimitList {
     margin-top: 12px;
     padding: 14px 16px;
@@ -570,3 +550,4 @@ Select2 스타일
 .columns-hidden {
     display: none !important;
 }
+
