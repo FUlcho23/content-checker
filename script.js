@@ -72,7 +72,7 @@ function hideLoading() {
         loadingTimeoutId = null;
     } else {
         //B. 이미 타이머가 실행되어 스피너가 표시되고 있는 경우 (100ms 초과) 숨김
-        loadingOverlay.style.display = 'none';
+        loading.style.display = 'none';
     }
 }
 
@@ -1456,4 +1456,5 @@ loadDataBtn.addEventListener('click', () => {
     // 메인 스레드는 즉시 해방되어 로딩 스피너가 부드럽게 돌아갑니다.
     excelWorker.postMessage({ file: file });
 });
+
 
