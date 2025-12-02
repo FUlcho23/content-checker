@@ -50,6 +50,32 @@ const limitValueInput = document.getElementById('limitValue'); // 제한 비율 
 const addLimitBtn = document.getElementById('addLimitBtn'); // 제한 추가 버튼
 const customLimitList = document.getElementById('customLimitList'); // 제한 목록 표시 컨테이너
 
+// 로딩 제어 변수
+let loadingTimeoutId = null;
+const LOADING_THRESHOLD = 50; // 100ms 이내에 완료되면 스피너 표시 안함
+
+// 로딩중...표시
+const loading = document.getElementById('loading');
+function showLoading() {
+    // 이전 타이머가 있다면 취소
+    clearTimeout(loadingTimeoutId);
+    
+    // 임계점(100ms) 후에 실제로 스피너를 보여주도록 타이머 설정
+    loadingTimeoutId = setTimeout(() => {
+        loadingOverlay.style.display = 'flex';
+    }, LOADING_THRESHOLD);
+}
+function hideLoading() {
+    if (loadingTimeoutId) {
+		//A. 만약 타이머가 생기기전이면(100ms안에 끝났다면) 취소
+        clearTimeout(loadingTimeoutId);
+        loadingTimeoutId = null;
+    } else {
+        //B. 이미 타이머가 실행되어 스피너가 표시되고 있는 경우 (100ms 초과) 숨김
+        loadingOverlay.style.display = 'none';
+    }
+}
+
 let filterOptions = {};// 모든 컬럼의 필터 데이터 (유니크 값)
 let activeFilters = {};// 현재 적용된 필터 조건 {컬럼명: ['값1', '값2'], ...}
 
@@ -207,6 +233,7 @@ function applyAllFilters() {
 // -----------------------------
 // 데이터 로드 버튼 이벤트 리스너
 // -----------------------------
+/*
 loadDataBtn.addEventListener('click', () => {
     const files = fileInput.files;
     if (files.length === 0) {
@@ -250,11 +277,6 @@ loadDataBtn.addEventListener('click', () => {
             
             const fileHeaders = jsonRows[0];
             
-            // ------------------------------------------------------------------
-            // 💡 수정된 핵심 로직: 복잡한 헤더를 정리된 키로 변환
-            
-            // 1. 원본 순서대로 정리된 키 배열 생성
-            // (cleanHeader 함수는 외부에서 정의되어 있어야 함)
             const cleanedKeys = fileHeaders.map(header => cleanHeader(header));
 
             allRows = jsonRows.slice(1).map(row => {
@@ -272,19 +294,13 @@ loadDataBtn.addEventListener('click', () => {
                 return obj;
             }).filter(obj => Object.keys(obj).length > 0);
             
-            // ------------------------------------------------------------------
-            
-            // ------------------------------------------------------------------
             const allFileColumns = allRows.length > 0 ? Object.keys(allRows[0]) : [];
 			let filterColumnsToUse;
 			let scoreKeyFound = allFileColumns.includes(DEFAULT_SCORE_COLUMN_KEY);
 			let gradeKeyFound = allFileColumns.includes(DEFAULT_GRADE_COLUMN_KEY);
 
-			// ------------------------------------------------------------------
-			// 💡 핵심 로직 1: 점수/등급 키 필수 체크 (없으면 무조건 전체 컬럼 사용)
-			// ------------------------------------------------------------------
 			if (!scoreKeyFound || !gradeKeyFound) {
-				// ⚠️ 케이스 0: 필수 점수/등급 키가 없으면 무조건 전체 컬럼 사용
+				//케이스 0: 필수 점수/등급 키가 없으면 무조건 전체 컬럼 사용
 				filterColumnsToUse = allFileColumns;
 				targetScoreKey = ''; 
 				targetGradeKey = ''; 
@@ -292,10 +308,6 @@ loadDataBtn.addEventListener('click', () => {
 				alert(`경고: 기본 컬럼 키 (${DEFAULT_SCORE_COLUMN_KEY}, ${DEFAULT_GRADE_COLUMN_KEY})가 파일에 없습니다. 점수/등급 컬럼을 직접 선택하고 필터링할 컬럼을 모두 사용합니다.`);
 
 			} else {
-				// ------------------------------------------------------------------
-				// 💡 핵심 로직 2: 필터 우선순위 체크 (단일 if/else if 체인)
-				// ------------------------------------------------------------------
-
 				// 1. DEFAULT_FILTER_COLUMNS (5개) 모두 존재 여부
 				const hasAllDefault = DEFAULT_FILTER_COLUMNS.every(key => allFileColumns.includes(key));
 
@@ -327,7 +339,6 @@ loadDataBtn.addEventListener('click', () => {
 				targetScoreKey = DEFAULT_SCORE_COLUMN_KEY;
 				targetGradeKey = DEFAULT_GRADE_COLUMN_KEY;
 			}
-            // ------------------------------------------------------------------
             // 3. 컬럼 목록 갱신 및 필터 생성 (결정된 목록 사용)
 			renderColumnsOnce(allFileColumns); // 표시 컬럼은 항상 전체 컬럼 사용
 			createDynamicFilters(filterColumnsToUse);
@@ -353,7 +364,7 @@ loadDataBtn.addEventListener('click', () => {
 	updateGradeDistributionButton();
     reader.readAsArrayBuffer(file);
 });
-
+*/
 // -----------------------------
 // 토글 로직 추가
 // -----------------------------
@@ -363,8 +374,10 @@ errorToggle.addEventListener("change", () => {
         .map(cb => cb.value);
     const currentCheckType = document.querySelector("input[name='checkType']:checked").value;
 
+	const errorRowSet = new Set(errorRowsToExport);
+	
     // currentFilteredRows는 applyAllFilters()를 통해 이미 최신 필터링 상태입니다.
-    renderResultTable(currentFilteredRows, selectedColumns, currentCheckType); 
+    renderResultTable(currentFilteredRows, selectedColumns, currentCheckType, errorRowSet); 
 });
 
 // -----------------------------
@@ -381,12 +394,17 @@ resultTableHead.addEventListener('click', (event) => {
 });
 
 // -----------------------------
-// 테이블 헤더 클릭 이벤트 핸들러
+// 테이블 헤더 클릭 이벤트 핸들러 (최적화 및 로딩 제어)
 // -----------------------------
 function handleHeaderClick(columnName) {
+    // 1. 로딩 표시 시작
+    showLoading(); 
+    
+    // 헤더 클릭 시 필요한 모든 전역 상태 업데이트 및 데이터 준비는 동기적으로 진행
     const selectedColumns = [...displayColumns.querySelectorAll("input:checked")]
-                                     .map(cb => cb.value);
+                                         .map(cb => cb.value);
 
+    // 정렬 방향 업데이트
     if (currentSortColumn === columnName) {
         currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
     } else {
@@ -394,10 +412,20 @@ function handleHeaderClick(columnName) {
         currentSortDirection = 'asc';
     }
 
-    let rows = currentFilteredRows; // 이미 필터링된 데이터를 사용
+    const rows = currentFilteredRows; // 현재 필터링된 데이터
     const currentCheckType = document.querySelector("input[name='checkType']:checked").value;
+    
+    // 2. 부하가 큰 정렬 및 렌더링을 비동기(0ms setTimeout)로 지연 실행
+    setTimeout(() => {
+        // Set을 생성하고 전달하여 O(1) 탐색 최적화
+        const errorRowSet = new Set(errorRowsToExport); 
 
-    renderResultTable(rows, selectedColumns, currentCheckType);
+        // 정렬 및 렌더링은 여기서 단 한 번만 실행됨
+        renderResultTable(rows, selectedColumns, currentCheckType, errorRowSet);
+        
+        // 3. 작업 완료 후 로딩 숨김
+        hideLoading(); 
+    }, 0);
 }
 
 // -----------------------------
@@ -439,31 +467,37 @@ function renderGradePercentUI() {
 }
 
 // -----------------------------
-// 검증 실행
+// 검증 실행 (로딩 스피너 제어 및 비동기 처리 적용)
 // -----------------------------
 checkBtn.addEventListener("click", () => {
+    
+    // 1. 로딩 시작
+	showLoading();
+    
+    // 이 블록은 동기적으로 실행되는 빠른 유효성 검사 및 변수 초기화입니다.
     const errorToggle = document.getElementById("errorToggle");
     isErrorFilterOn = errorToggle ? errorToggle.checked : false;
 
-    let rows = currentFilteredRows; // ✅ 현재 필터링된 데이터를 사용
+    let rows = currentFilteredRows; 
     const checkType = document.querySelector("input[name='checkType']:checked");
-    
-    // 전역 변수에서 customLimits (사용자가 설정/자동 로드된 제한 비율) 가져옴
     const currentCustomLimits = customLimits; 
 
+    // --- 초기 유효성 검사 (실패 시 반드시 hideLoading() 호출) ---
     if (rows.length === 0) {
         alert("검증 대상 데이터가 없습니다. 파일을 로드하고 필터링 상태를 확인해주세요.");
+        hideLoading(); 
         return;
     }
 
-    // 등급 제한 검증 시, 제한 비율이 설정되어 있어야 함
     if (checkType.value === "limitCheck" && currentCustomLimits.length === 0) {
         alert("등급 제한 검증을 위해서는 '평가 유형 선택' 또는 '직접 설정하기'를 통해 제한 비율을 설정해야 합니다.");
+        hideLoading(); 
         return;
     }
 
     if (!checkType) {
         alert("검증 조건을 선택해주세요!");
+        hideLoading(); 
         return;
     }
 
@@ -472,19 +506,18 @@ checkBtn.addEventListener("click", () => {
 
     if (selectedColumns.length === 0) {
         alert("표시할 컬럼을 최소 1개 선택해주세요!");
+        hideLoading(); 
         return;
     }
 
-    // --- 1. 테이블 헤더 초기화 ---
+    // --- 초기화 (동기적) ---
     resultTableHead.innerHTML = selectedColumns
         .map(col => `<th data-column="${col}">${col}</th>`)
         .join("");
     resultTableBody.innerHTML = "";
 
-    // --- 2. 오류 내보내기 배열 초기화 ---
     errorRowsToExport = [];
     
-    // --- 3. 등급별 카운터 초기화 ---
     const gradeCounts = {
         'A+': 0, 'A0': 0, 'B+': 0, 'B0': 0, 
         'C+': 0, 'C0': 0, 'D+': 0, 'D0': 0, 
@@ -493,95 +526,103 @@ checkBtn.addEventListener("click", () => {
         '점수 오류/누락': 0 
     }; 
     
-    const scoreCol = scoreColumn.value; // 점수 컬럼 키
-    const gradeCol = gradeColumn.value; // 등급 컬럼 키
-    const nullCol = nullColumn ? nullColumn.value : null; // 널값 검사용 컬럼 키 (필요 시)
+    const scoreCol = scoreColumn.value;
+    const gradeCol = gradeColumn.value;
+    const nullCol = nullColumn ? nullColumn.value : null;
 
-    // --- 4. 데이터 검증 루프 (개별 행 검증 및 통계 수집) ---
-    rows.forEach(row => {
-        let isError = false;
-        row[EXPECTED_GRADE_COLUMN] = '';
+	// 2. 부하가 큰 검증 루프와 모든 렌더링 작업을 비동기 블록으로 이동 (setTimeout)
+	setTimeout(() => {
+		// --- 4. 데이터 검증 루프 (개별 행 검증 및 통계 수집) ---
+		rows.forEach(row => {
+			let isError = false;
+			row[EXPECTED_GRADE_COLUMN] = '';
 
-        // A. 등급 카운팅 로직 (항상 실행)
-        const originalGrade = String(row[gradeCol] || '').toUpperCase();
-        
-        if (gradeCol && originalGrade) {
-            if (gradeCounts.hasOwnProperty(originalGrade)) {
-                gradeCounts[originalGrade]++;
-            } else {
-                gradeCounts['기타']++;
-            }
-        }
+			// A. 등급 카운팅 로직 (항상 실행)
+			const originalGrade = String(row[gradeCol] || '').toUpperCase();
+			
+			if (gradeCol && originalGrade) {
+				if (gradeCounts.hasOwnProperty(originalGrade)) {
+					gradeCounts[originalGrade]++;
+				} else {
+					gradeCounts['기타']++;
+				}
+			}
 
-        // B. 개별 검증 실행
-        if (checkType.value === "gradeCheck") {
-            const gradeCheckResult = runGradeCheck(row, gradeCol, scoreCol, gradeCutoff);
-            
-            isError = gradeCheckResult.isError;
-            row[EXPECTED_GRADE_COLUMN] = gradeCheckResult.expectedGrade;
+			// B. 개별 검증 실행
+			if (checkType.value === "gradeCheck") {
+				// runGradeCheck 함수가 정의되어 있어야 합니다.
+				const gradeCheckResult = runGradeCheck(row, gradeCol, scoreCol, gradeCutoff);
+				
+				isError = gradeCheckResult.isError;
+				row[EXPECTED_GRADE_COLUMN] = gradeCheckResult.expectedGrade;
 
-            if (gradeCheckResult.isScoreInvalid) {
-                // 점수 오류인 경우, 이미 카운트된 원본 등급 카운터를 조정하고 오류 카운트를 증가시킵니다.
-                if (gradeCol && originalGrade && gradeCounts.hasOwnProperty(originalGrade)) {
-                    gradeCounts[originalGrade]--; 
-                }
-                gradeCounts['점수 오류/누락']++;
-            }
-        } 
-        
-        if (checkType.value === "notNull") {
-            if (nullCol && runNotNullCheck(row, nullCol)) {
-                isError = true;
-            }
-        }
-        
-        // 'limitCheck'는 집단 검증이므로 개별 행 루프에서는 오류 플래그를 설정하지 않습니다.
-        
-        if (isError) {
-            errorRowsToExport.push(row);
-        }
-    });
-    
-    // --- 4.1. 집단 검증 실행 (등급 제한 검증) ---
-    if (checkType.value === "limitCheck") {
-        const totalStudents = rows.length;
-        const limitCheckResult = runLimitCheck(gradeCounts, totalStudents, currentCustomLimits);
-          
-        // 등급 제한 검증 시에는 개별 행 오류가 없으므로 오류 내보내기 배열을 비워둡니다.
-        errorRowsToExport = []; 
-        
-        // 💡 변경: 등급 제한 검증 결과는 전용 요약 함수로 처리하여 summaryPanel에 표시합니다.
-        // (이 함수는 이전에 제가 제공해 드린 renderLimitCheckSummary여야 합니다.)
-        renderLimitCheckSummary(limitCheckResult.isLimitError, limitCheckResult.errorDetails);
-    
-    // 💡 추가: 등급 제한 검증이 아닐 경우 (gradeCheck, notNull) 기존 요약 함수를 호출합니다.
-    } else {
-        // --- 5. 요약 통계 업데이트 --- (Grade Check 또는 Not Null Check)
-        updateSummaryPanel(rows.length, errorRowsToExport.length);
-        
-        // Limit Check 전용 요약을 사용하지 않으므로 summaryPanel 클래스를 초기화합니다.
-        const summaryPanel = document.getElementById('summaryPanel');
-        if (summaryPanel) {
-            summaryPanel.classList.remove('limit-check-error', 'limit-check-ok');
-        }
-    }
+				if (gradeCheckResult.isScoreInvalid) {
+					// 점수 오류인 경우, 이미 카운트된 원본 등급 카운터를 조정하고 오류 카운트를 증가시킵니다.
+					if (gradeCol && originalGrade && gradeCounts.hasOwnProperty(originalGrade)) {
+						gradeCounts[originalGrade]--;	
+					}
+					gradeCounts['점수 오류/누락']++;
+				}
+			}	
+			
+			if (checkType.value === "notNull") {
+				// runNotNullCheck 함수가 정의되어 있어야 합니다.
+				if (nullCol && runNotNullCheck(row, nullCol)) {
+					isError = true;
+				}
+			}
+			
+			if (isError) {
+				errorRowsToExport.push(row);
+			}
+		});
+		
+		// --- 4.1. 집단 검증 실행 (등급 제한 검증) ---
+		if (checkType.value === "limitCheck") {
+			const totalStudents = rows.length;
+			// runLimitCheck 함수가 정의되어 있어야 합니다.
+			const limitCheckResult = runLimitCheck(gradeCounts, totalStudents, currentCustomLimits);
+			
+			errorRowsToExport = []; // 제한 검증 시 개별 오류는 없으므로 비움
+			
+			// renderLimitCheckSummary 함수가 정의되어 있어야 합니다.
+			renderLimitCheckSummary(limitCheckResult.isLimitError, limitCheckResult.errorDetails);
+		
+		} else {
+			// --- 5. 요약 통계 업데이트 --- 
+			// updateSummaryPanel 함수가 정의되어 있어야 합니다.
+			updateSummaryPanel(rows.length, errorRowsToExport.length);
+			
+			const summaryPanel = document.getElementById('summaryPanel');
+			if (summaryPanel) {
+				summaryPanel.classList.remove('limit-check-error', 'limit-check-ok');
+			}
+		}
+		
+		// --- 4.2. 오류 행 Set 생성 (최적화) ---
+		const errorRowSet = new Set(errorRowsToExport);
 
-    // --- 6. 등급 분포율 계산 및 렌더링 ---
-    const totalStudents = rows.length;
-    const finalDistribution = calculateDistribution(gradeCounts, totalStudents); 
-    renderGradeDistributionTextUI(finalDistribution, totalStudents);
-    
-    // 한 과목인지 확인
-    updateGradeDistributionButton();
-    
-    // --- 7. 검증 후 결과 테이블 렌더링 ---
-    if (selectedColumns.length > 0 && !currentSortColumn) {
-        currentSortColumn = selectedColumns[0];
-        currentSortDirection = 'asc';
-    }
+		// --- 6. 등급 분포율 계산 및 렌더링 ---
+		const totalStudents = rows.length;
+		// calculateDistribution, renderGradeDistributionTextUI 함수가 정의되어 있어야 합니다.
+		const finalDistribution = calculateDistribution(gradeCounts, totalStudents);	
+		renderGradeDistributionTextUI(finalDistribution, totalStudents);
+		
+		// updateGradeDistributionButton 함수가 정의되어 있어야 합니다.
+		updateGradeDistributionButton();
+		
+		// --- 7. 검증 후 결과 테이블 렌더링 ---
+		if (selectedColumns.length > 0 && !currentSortColumn) {
+			currentSortColumn = selectedColumns[0];
+			currentSortDirection = 'asc';
+		}
 
-    // 등급 제한 검증 시에는 모든 행을 결과 테이블에 표시합니다.
-    renderResultTable(rows, selectedColumns, checkType.value);
+		// renderResultTable 함수가 정의되어 있어야 합니다.
+		renderResultTable(rows, selectedColumns, checkType.value, errorRowSet);
+		
+		// 3. 로딩 끝
+		hideLoading();
+	}, 0);
 });
 //---------------------------------------------
 //점수/등급 일치 여부를 검사하고 예상 등급을 설정-검증용 필터1
@@ -782,7 +823,7 @@ saveCsvBtn.addEventListener("click", () => {
 });
 
 // -----------------------------
-// 컬럼 목록 1회 렌더링 함수 
+// 컬럼 목록 1회 렌더링 함수 (DocumentFragment 최적화 적용)
 // -----------------------------
 function renderColumnsOnce(allColumns) {
     if (allRows.length === 0) {
@@ -793,8 +834,12 @@ function renderColumnsOnce(allColumns) {
         return; 
     }
 
-    // 1. 표시 컬럼 체크박스 렌더링
+    // 1. 표시 컬럼 체크박스 렌더링 최적화
     displayColumns.innerHTML = "";
+    
+    //DocumentFragment 생성
+    const fragment = document.createDocumentFragment(); 
+
     allColumns.forEach(col => {
         const label = document.createElement("label");
         label.style.display = "block";
@@ -805,10 +850,15 @@ function renderColumnsOnce(allColumns) {
 
         label.appendChild(checkbox);
         label.append(" " + col);
-        displayColumns.appendChild(label);
+        
+        //Fragment에 추가
+        fragment.appendChild(label); 
     });
+    
+    //DOM에 한번 추가
+    displayColumns.appendChild(fragment); 
 
-    // 2. 점수/등급/Null 컬럼 선택 <select> 렌더링
+    // 2. 점수/등급/Null 컬럼 선택 <select> 렌더링 (기존 함수 재활용)
     renderColumnSelect('scoreColumn', allColumns, targetScoreKey); 
     renderColumnSelect('gradeColumn', allColumns, targetGradeKey);
     renderColumnSelect('nullColumn', allColumns, '');
@@ -817,14 +867,14 @@ function renderColumnsOnce(allColumns) {
 // -----------------------------
 // 정렬된 결과 테이블 다시 그리기 함수
 // -----------------------------
-function renderResultTable(dataRows, selectedColumns, currentCheckType) {
+function renderResultTable(dataRows, selectedColumns, currentCheckType, errorSet) {
 
     resultTableBody.innerHTML = ""; 
 
     let rowsToRender;
     
     if (isErrorFilterOn) {
-        rowsToRender = dataRows.filter(row => errorRowsToExport.includes(row));
+        rowsToRender = dataRows.filter(row => errorSet.has(row));
     } else {
         rowsToRender = dataRows;
     }
@@ -854,37 +904,22 @@ function renderResultTable(dataRows, selectedColumns, currentCheckType) {
 
     if (currentSortColumn) {
         sortedRows.sort((a, b) => {
-            let valA = a[currentSortColumn];
-            let valB = b[currentSortColumn];
-
-            const isNullA = (valA === null || valA === undefined || valA === "");
-            const isNullB = (valB === null || valB === undefined || valB === "");
-            if (isNullA && isNullB) return 0;
-            if (isNullA) return currentSortDirection === 'asc' ? 1 : -1;
-            if (isNullB) return currentSortDirection === 'asc' ? -1 : 1;
-
-            valA = String(valA);
-            valB = String(valB);
-
-            const numA = Number(valA);
-            const numB = Number(valB);
-            const isNumeric = !isNaN(numA) && !isNaN(numB) && valA !== "" && valB !== "";
-
-            if (isNumeric) {
-                if (numA < numB) return currentSortDirection === 'asc' ? -1 : 1;
-                if (numA > numB) return currentSortDirection === 'asc' ? 1 : -1;
-                return 0;
-            }
-            const comparison = valA.localeCompare(valB);
-            return currentSortDirection === 'asc' ? comparison : -comparison;
+            // 🚨 compareValues 함수를 사용하여 정렬 로직 단순화
+            return compareValues(
+                a[currentSortColumn], 
+                b[currentSortColumn], 
+                currentSortDirection
+            );
         });
     }
+	
+	const fragment = document.createDocumentFragment();//데이터 정렬 후 가상DOM생성(DocumentFragment)
     
     // 테이블 내용 렌더링
     sortedRows.forEach(row => {
         const tr = document.createElement("tr");
         
-        if (errorRowsToExport.includes(row)) {
+        if (errorSet.has(row)) {
             tr.classList.add("error");
         }
         
@@ -898,8 +933,9 @@ function renderResultTable(dataRows, selectedColumns, currentCheckType) {
             }
             tr.appendChild(td);
         });
-        resultTableBody.appendChild(tr);
+        fragment.appendChild(tr);
     });
+	resultTableBody.appendChild(fragment);
 }
 
 // -----------------------------
@@ -1316,4 +1352,107 @@ function renderLimitCheckSummary(isError, errorDetails) {
         summaryPanel.classList.add('limit-check-ok');
     }
 }
+/**
+ * 두 값을 비교하여 정렬 순서를 결정합니다. (숫자, 문자열, Null 값 처리)
+ * @param {*} valA - 첫 번째 값
+ * @param {*} valB - 두 번째 값
+ * @param {string} direction - 'asc' (오름차순) 또는 'desc' (내림차순)
+ * @returns {number} - 정렬 비교 결과 (-1, 0, 1)
+ */
+function compareValues(valA, valB, direction) {
+    // 1. Null/Undefined/빈 문자열 처리 (정렬 시 항상 마지막으로)
+    const isNullA = (valA === null || valA === undefined || valA === "");
+    const isNullB = (valB === null || valB === undefined || valB === "");
+    
+    if (isNullA && isNullB) return 0;
+    // Null이 아닌 값이 Null 값보다 항상 먼저 오도록 처리
+    if (isNullA) return direction === 'asc' ? 1 : -1; 
+    if (isNullB) return direction === 'asc' ? -1 : 1;
 
+    // String으로 변환 (숫자형 문자열 비교를 위해)
+    const strA = String(valA).trim();
+    const strB = String(valB).trim();
+
+    // 2. 숫자형 데이터 처리
+    const numA = Number(strA);
+    const numB = Number(strB);
+    const isNumeric = !isNaN(numA) && !isNaN(numB) && strA !== "" && strB !== "";
+
+    if (isNumeric) {
+        if (numA < numB) return direction === 'asc' ? -1 : 1;
+        if (numA > numB) return direction === 'asc' ? 1 : -1;
+        return 0;
+    }
+    
+    // 3. 문자열 데이터 처리 (LocaleCompare 사용)
+    const comparison = strA.localeCompare(strB);
+    return direction === 'asc' ? comparison : -comparison;
+}
+// =================================================================
+// worker 초기화 - worker.js를 사용
+// =================================================================
+const excelWorker = new Worker('worker.js');
+
+// Worker로부터 메시지 수신 처리 (비동기 응답)
+excelWorker.onmessage = function(e) {
+    const result = e.data;
+
+    // 작업 완료 후 로딩 숨김
+    hideLoading();
+
+    if (result.success) {
+        // 1. 데이터 업데이트
+        allRows = result.data;
+        const allFileColumns = result.allFileColumns;
+        const filterColumnsToUse = result.filterColumnsToUse;
+        
+        // 2. 전역 변수 업데이트 (점수/등급 키)
+        if (result.targetScoreKey) targetScoreKey = result.targetScoreKey;
+        if (result.targetGradeKey) targetGradeKey = result.targetGradeKey;
+
+        // 경고 메시지 로직 (필수 키 누락 시)
+        if (!result.targetScoreKey || !result.targetGradeKey) {
+            alert(`경고: 기본 컬럼 키 (${DEFAULT_SCORE_COLUMN_KEY}, ${DEFAULT_GRADE_COLUMN_KEY})가 파일에 없습니다. 점수/등급 컬럼을 직접 선택하고 필터링할 컬럼을 모두 사용합니다.`);
+        }
+
+        // 3. UI 렌더링 호출
+        renderColumnsOnce(allFileColumns);
+        createDynamicFilters(filterColumnsToUse);
+        
+        // 4. 파일명 및 완료 메시지
+        fileNameDisplay.innerHTML = `현재 파일: ${result.fileName}`;
+        alert(`${result.fileName} 파일에서 ${allRows.length}개의 데이터 행을 성공적으로 로드했습니다.`);
+        
+        // 5. 버튼 상태 업데이트
+        updateGradeDistributionButton();
+
+    } else {
+        // 에러 처리
+        console.error("Worker 에러:", result.error);
+        alert(
+            "⚠️ 파일 처리 중 오류가 발생했습니다.\n\n" +
+            "이유: " + result.error + "\n\n" +
+            "파일 형식이 손상되었거나 암호가 걸려있는지 확인해주세요. 문제가 지속되면 '값만 붙여넣기'하여 새로 저장한 후 시도해주세요."
+        );
+    }
+};
+
+// =================================================================
+// 데이터 로드 버튼 이벤트 리스너(loadDataBtn) - worker.js를 사용
+// =================================================================
+loadDataBtn.addEventListener('click', () => {
+    const files = fileInput.files;
+    if (files.length === 0) {
+        alert("업로드할 파일을 선택해주세요 (Excel 또는 CSV).");
+        return;
+    }
+    
+    const file = files[0];
+    
+    // 1. 로딩 표시 (UI 멈춤 방지용 스피너)
+    showLoading();
+
+    // 2. Worker에게 파일 전달 (무거운 작업 시작)
+    // 메인 스레드는 즉시 해방되어 로딩 스피너가 부드럽게 돌아갑니다.
+    excelWorker.postMessage({ file: file });
+});
