@@ -52,7 +52,7 @@ const customLimitList = document.getElementById('customLimitList'); // 제한 �
 
 // 로딩 제어 변수
 let loadingTimeoutId = null;
-const LOADING_THRESHOLD = 50; // 100ms 이내에 완료되면 스피너 표시 안함
+const LOADING_THRESHOLD = 50; // 50ms안에 완료되면 호출하지 않음
 
 // 로딩중...표시
 const loading = document.getElementById('loading');
@@ -60,20 +60,17 @@ function showLoading() {
     // 이전 타이머가 있다면 취소
     clearTimeout(loadingTimeoutId);
     
-    // 임계점(100ms) 후에 실제로 스피너를 보여주도록 타이머 설정
+    // 50ms후에 실제로 스피너를 보여주도록 타이머 설정
     loadingTimeoutId = setTimeout(() => {
         loading.style.display = 'flex';
     }, LOADING_THRESHOLD);
 }
 function hideLoading() {
-    if (loadingTimeoutId) {
-		//A. 만약 타이머가 생기기전이면(100ms안에 끝났다면) 취소
+		//만약 타이머가 생기기전이면 취소
         clearTimeout(loadingTimeoutId);
         loadingTimeoutId = null;
-    } else {
-        //B. 이미 타이머가 실행되어 스피너가 표시되고 있는 경우 (100ms 초과) 숨김
+        //이미 타이머가 실행되어 스피너가 표시되고 있는 경우 숨김
         loading.style.display = 'none';
-    }
 }
 
 let filterOptions = {};// 모든 컬럼의 필터 데이터 (유니크 값)
@@ -1470,6 +1467,7 @@ loadDataBtn.addEventListener('click', () => {
     // 메인 스레드는 즉시 해방되어 로딩 스피너가 부드럽게 돌아갑니다.
     excelWorker.postMessage({ file: file });
 });
+
 
 
 
