@@ -62,7 +62,7 @@ function showLoading() {
     
     // 임계점(100ms) 후에 실제로 스피너를 보여주도록 타이머 설정
     loadingTimeoutId = setTimeout(() => {
-        loadingOverlay.style.display = 'flex';
+        loading.style.display = 'flex';
     }, LOADING_THRESHOLD);
 }
 function hideLoading() {
@@ -1456,3 +1456,4 @@ loadDataBtn.addEventListener('click', () => {
     // 메인 스레드는 즉시 해방되어 로딩 스피너가 부드럽게 돌아갑니다.
     excelWorker.postMessage({ file: file });
 });
+
