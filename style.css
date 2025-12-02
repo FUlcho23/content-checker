@@ -36,7 +36,7 @@ h1 {
     background-color: #ffffff;
     padding: 15px 20px;
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     margin-bottom: 20px;
 }
 
@@ -124,34 +124,22 @@ h1 {
 .option-details {
     margin-top: 8px;
     margin-left: 20px;
-    padding: 5px 0;
     display: flex;
-    flex-wrap: wrap; /* 작은 화면에서 필요 시 줄바꿈 */
-    align-items: center;
-    gap: 15px; /* 레이블과 선택창 간 간격 */
-}
-/* ================================
-점수/등급 옵션 상세 설정
-================================ */
-.option-details {
-    display: flex; /* Flexbox 활성화 */
     flex-wrap: wrap;
-    gap: 15px 30px; /* 항목 간 간격을 넓혀 구분 명확화 (PC/모바일 공용) */
-    align-items: flex-start; /* 상단 정렬 */
-    margin-top: 8px;
-    margin-left: 20px;
+    align-items: flex-start;
+    gap: 15px 30px;
     padding: 5px 0;
 }
 
 .select-pair {
     display: flex;
     flex-direction: row;
-    gap: 5px; /* 레이블과 셀렉트 사이 간격 */
-    min-width: 180px; /* 셀렉트 박스가 너무 작아지지 않도록 최소 너비 설정 */
+    gap: 5px;
+    min-width: 180px;
 }
 
 .select-pair label {
-    font-weight: bold; /* 레이블을 다시 강조 */
+    font-weight: bold;
     margin-bottom: 0;
     color: #34495e;
     font-size: 0.95em;
@@ -162,7 +150,7 @@ Select / Button 스타일
 ================================ */
 select,
 #checkBtn,
-#saveCsvBtn {
+#saveErrorCsvBtn, #saveAllCsvBtn {
     padding: 8px;
     border-radius: 4px;
     border: 1px solid #ced4da;
@@ -170,9 +158,7 @@ select,
     background-color: #fff;
 }
 
-select {
-    width: 120px;
-}
+select { width: 120px; }
 
 #checkBtn {
     background-color: var(--success-color);
@@ -183,22 +169,10 @@ select {
     border-color: var(--success-color);
 }
 
-#checkBtn:hover {
-    background-color: #27ae60;
-}
+#checkBtn:hover { background-color: #27ae60; }
 
-#saveCsvBtn {
-    background-color: #3498db;
-    color: white;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background-color 0.2s;
-    border-color: #3498db;
-}
-
-#saveCsvBtn:hover {
-    background-color: #2980b9;
-}
+#saveErrorCsvBtn:hover,
+#saveAllCsvBtn:hover { background-color: #2980b9; }
 
 /* ================================
 결과 테이블 스타일
@@ -261,10 +235,7 @@ Summary / Filter Bar
     background-color: #f0f0f0;
 }
 
-#summaryPanel {
-    font-size: 1em;
-    font-weight: 600;
-}
+#summaryPanel { font-size: 1em; font-weight: 600; }
 
 #filter-controls {
     display: flex;
@@ -281,26 +252,14 @@ Summary / Filter Bar
 /* ================================
 토글 스위치
 ================================ */
-.toggle-switch {
-    position: relative;
-    display: inline-block;
-    width: 38px;
-    height: 20px;
-}
+.toggle-switch { position: relative; display: inline-block; width: 38px; height: 20px; }
 
-.toggle-switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-}
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
 
 .slider {
     position: absolute;
     cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    top: 0; left: 0; right: 0; bottom: 0;
     background-color: #ccc;
     transition: .4s;
     border-radius: 20px;
@@ -311,23 +270,17 @@ Summary / Filter Bar
     content: "";
     height: 16px;
     width: 16px;
-    left: 2px;
-    bottom: 2px;
+    left: 2px; bottom: 2px;
     background-color: white;
     transition: .4s;
     border-radius: 50%;
 }
 
-input:checked + .slider {
-    background-color: #f0ad4e;
-}
-
-input:checked + .slider:before {
-    transform: translateX(18px);
-}
+input:checked + .slider { background-color: #f0ad4e; }
+input:checked + .slider:before { transform: translateX(18px); }
 
 /* ================================
-등급 분포 토글 버튼
+등급 분포 토글 & 상세 영역
 ================================ */
 .detail-toggle-btn {
     background: none;
@@ -342,21 +295,15 @@ input:checked + .slider:before {
     white-space: nowrap;
 }
 
-#toggleIcon {
-    margin-right: 5px;
-    transition: transform 0.2s;
-}
+#toggleIcon { margin-right: 5px; transition: transform 0.2s; }
+
 .disabled-style {
-    opacity: 0.5; /* 버튼을 흐리게 만듭니다 */
-    cursor: not-allowed !important; /* 클릭 불가 커서 표시 */
+    opacity: 0.5;
+    cursor: not-allowed !important;
 }
-/* ================================
-등급 분포 상세 영역
-================================ */
+
 #gradeDistributionDetail {
     width: 100%;
-    /* flex-basis: 100%; 은 flex 컨테이너 내부 요소가 아니므로 제거하거나,
-       필터 영역이 Flexbox였다면 제거해야 함. 일반적으로 필요 없음 */
     padding: 10px 0;
     margin-top: 10px;
     margin-bottom: 5px;
@@ -369,11 +316,9 @@ input:checked + .slider:before {
     margin-top: 0;
 }
 
-/* 항목 + 막대 그래프를 감싸는 컨테이너 */
 .grade-distribution-text-item {
     display: flex;
     align-items: center;
-    /* justify-content: space-between; (제거됨 - 왼쪽 정렬 유지) */
     padding: 3px 0;
     margin-left: 10px;
     font-size: 0.95em;
@@ -381,16 +326,14 @@ input:checked + .slider:before {
     white-space: nowrap;
 }
 
-/* 등급 텍스트 레이블 (막대 그래프 시작점 정렬용) */
 .grade-label {
-    width: 160px; /* 고정 너비 유지 */
+    width: 160px;
     flex-shrink: 0;
     text-align: left;
 }
 
-/* 막대 그래프 컨테이너 (남은 공간 모두 차지) */
 .grade-bar-container {
-    flex-grow: 1; 
+    flex-grow: 1;
     height: 12px;
     background-color: #e9ecef;
     border-radius: 3px;
@@ -398,21 +341,19 @@ input:checked + .slider:before {
     overflow: hidden;
 }
 
-/* 막대 그래프 채우기 */
 .grade-bar-fill {
     height: 100%;
     background-color: var(--primary-color);
     transition: width 0.5s ease-out;
 }
 
-/* 그룹 합산 항목 (단독 줄로 분리) */
 .grade-group-summary {
     font-weight: bold;
-    margin-left: 10px; 
+    margin-left: 10px;
     padding: 5px 0;
-    border-left: 3px solid #ccc; 
-    padding-left: 8px; 
-    display: block; 
+    border-left: 3px solid #ccc;
+    padding-left: 8px;
+    display: block;
 }
 
 /* ================================
@@ -443,7 +384,7 @@ input:checked + .slider:before {
 }
 
 /* ================================
-Select2 스타일 오버라이드
+Select2 스타일
 ================================ */
 .select2-container--default .select2-selection--multiple {
     border: 1px solid #ced4da !important;
@@ -471,9 +412,7 @@ Select2 스타일 오버라이드
     margin-left: 5px;
 }
 
-.select2-selection__choice__remove:hover {
-    color: #f8f9fa !important;
-}
+.select2-selection__choice__remove:hover { color: #f8f9fa !important; }
 
 .select2-container--default .select2-search--inline .select2-search__field {
     border: none;
@@ -496,174 +435,18 @@ Select2 스타일 오버라이드
 }
 
 /* ================================
-Select2 드롭다운 고정 문제 해결
+파일 업로드 / 제한 비율 / 로딩
 ================================ */
-.select2-container--default .select2-dropdown--below {
-    z-index: 1050;
-}
-
-/* 필터 토글 */
-#toggleFilterBtn {
-    margin-bottom: 10px;
-    position: relative;
-    z-index: 10;
-}
-
-#dynamicFilterWrapper {
-    display: block;
-}
-
-.filter-hidden {
-    display: none !important;
-}
-.distribution-hidden {
-    display: none !important;
-}
-.columns-hidden {
-    display: none !important;
-}
-.distribution-hidden{
-	display: none !important;
-};
-
-/* ================================
-테이블 래퍼
-================================ */
-.table-wrapper {
-    margin-top: 20px;
-    margin-bottom: 20px;
-}
-
-#resultTable {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-/* ================================
-반응형 웹 디자인
-================================ */
-@media (max-width: 768px) {
-
-    /* 상단 컨트롤 */
-    #top-controls {
-        flex-direction: column;
-        align-items: stretch;
-        padding: 10px;
-    }
-
-    .button-group {
-        margin-top: 10px;
-        justify-content: stretch;
-        gap: 5px;
-    }
-
-    #checkBtn,
-    #saveCsvBtn {
-        flex: 1;
-        padding: 10px;
-        font-size: 16px;
-    }
-
-    /* 메인 설정 */
-    #main-settings {
-        flex-direction: column;
-        gap: 15px;
-    }
-
-    .control-section {
-        box-shadow: none;
-    }
-
-    /* 동적 필터 한 줄로 */
-    #dynamic-filter-container {
-        flex-direction: column;
-        gap: 10px;
-    }
-
-    .filter-control-group {
-        flex-basis: 100%;
-    }
-
-    /* 테이블 스크롤 */
-    .table-wrapper {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-    }
-
-    #resultTable {
-        min-width: 600px;
-        width: auto;
-    }
-
-    #resultTable th,
-    #resultTable td {
-        padding: 8px 10px;
-        font-size: 12px;
-    }
-	/* 1. 상단 컨트롤 영역 (버튼 및 드롭다운) */
-    #top-controls {
-        flex-direction: column; 
-        align-items: stretch;
-    }
-
-    /* 🚨 버튼 그룹을 가로로 두 줄 배치하도록 수정 */
-    .button-group {
-        display: flex; /* Flexbox 유지 */
-        flex-wrap: wrap; /* 내용이 넘치면 다음 줄로 */
-        margin-top: 10px;
-        justify-content: space-between; /* 양 끝 정렬 */
-        gap: 5px 10px; /* 행 간격 5px, 열 간격 10px */
-    }
-    
-    /* 🚨 각 버튼/컨트롤이 그룹의 절반 너비를 차지하도록 설정 */
-    #file-upload-input, 
-    #load-data-btn,
-    #checkBtn, 
-    #saveCsvBtn {
-        /* 전체 너비 100%에서 열 간격 10px의 절반을 뺀 값 */
-        flex-basis: calc(50% - 5px); 
-        padding: 10px;
-        font-size: 14px;
-        text-align: center;
-    }
-    
-    /* 현재 파일명 표시 영역도 정렬에 참여시키거나, 별도 줄로 뺌 */
-    #current-file-display {
-        flex-basis: 100%; /* 한 줄 전체 사용 */
-        margin: 5px 0;
-        text-align: center;
-    }
-	.option-details {
-        flex-direction: row; /* 모바일에서 세로로 정렬 */
-        gap: 10px;
-    }
-    .select-pair {
-        min-width: 100%; /* 모바일에서 전체 너비 사용 */
-    }
-	#file-upload-controls {
-        flex-wrap: wrap;     /* 줄바꿈 허용 */
-    }
-
-    #file-upload-controls .m_filename {
-        flex-basis: 100%;    /* 강제로 한 줄 전체 차지 */
-        margin-top: 8px;
-    }
-}
-/*--------------------------------------*/
-/* 파일 업로드 전체 영역 (박스 제거 버전) */
 #file-upload-controls {
     display: flex;
     align-items: center;
     gap: 12px;
-
-    /* 박스 요소 제거 */
     padding: 0;
     background: none;
     border: none;
     box-shadow: none;
 }
 
-/* 업로드 버튼 */
 #file-upload-controls label[for="fileInput"] {
     background: #3a7afe;
     color: white;
@@ -675,16 +458,9 @@ Select2 드롭다운 고정 문제 해결
     border: none;
 }
 
-#file-upload-controls label[for="fileInput"]:hover {
-    background: #1f5bf0;
-}
+#file-upload-controls label[for="fileInput"]:hover { background: #1f5bf0; }
+#fileInput { display: none; }
 
-/* 파일 input 숨김 */
-#fileInput {
-    display: none;
-}
-
-/* Load Data 버튼 */
 #loadDataBtn {
     background: #4c5cff;
     color: white;
@@ -696,11 +472,8 @@ Select2 드롭다운 고정 문제 해결
     transition: 0.2s;
 }
 
-#loadDataBtn:hover {
-    background: #3f4dea;
-}
+#loadDataBtn:hover { background: #3f4dea; }
 
-/* 파일 이름 표시 */
 #fileNameDisplay {
     font-size: 13px;
     color: #333;
@@ -708,19 +481,15 @@ Select2 드롭다운 고정 문제 해결
     margin-left: 4px;
 }
 
-/* ================================
-4. 제한 비율 설정 목록 (#customLimitList)
-================================ */
 #customLimitList {
     margin-top: 12px;
     padding: 14px 16px;
-    border: 1px solid #e3e3e3;  /* 은은한 연한 회색 */
+    border: 1px solid #e3e3e3;
     border-radius: 8px;
-    background-color: #fafafa;  /* 약한 회백색 */
+    background-color: #fafafa;
     box-shadow: 0 1px 2px rgba(0,0,0,0.03);
 }
 
-/* 리스트 항목 */
 .custom-limit-item {
     display: flex;
     justify-content: space-between;
@@ -728,60 +497,76 @@ Select2 드롭다운 고정 문제 해결
     padding: 9px 4px;
     border-bottom: 1px solid #ededed;
     font-size: 0.93em;
-    color: #444; /* 너무 진하지 않고, 너무 연하지 않은 중간톤 */
+    color: #444;
 }
 
-.custom-limit-item:last-child {
-    border-bottom: none;
-}
+.custom-limit-item:last-child { border-bottom: none; }
 
-/* 삭제 버튼 - 저채도 톤 */
 .btn-remove-limit {
-    background-color: #d87777; /* 채도 낮춘 muted red */
+    background-color: #d87777;
     color: white;
     padding: 4px 10px;
     font-size: 0.82em;
     border-radius: 6px;
     border: none;
     cursor: pointer;
-    transition:
-        background-color 0.2s ease,
-        transform 0.15s ease;
+    transition: background-color 0.2s ease, transform 0.15s ease;
 }
 
-.btn-remove-limit:hover {
-    background-color: #c46b6b; /* 조금 더 진하지만 여전히 저채도 */
-}
+.btn-remove-limit:hover { background-color: #c46b6b; }
+.btn-remove-limit:active { transform: scale(0.97); }
 
-.btn-remove-limit:active {
-    transform: scale(0.97);
-}
-/* style.css 파일에 추가 */
 #loading {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(255, 255, 255, 0.8); /* 반투명 흰색 배경 */
-    display: none; /* ⚠️ 기본적으로 숨김 */
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background-color: rgba(255,255,255,0.8);
+    display: none;
     justify-content: center;
     align-items: center;
-    z-index: 9999; /* 다른 요소 위에 표시 */
+    z-index: 9999;
     flex-direction: column;
 }
 
 #loadingSpinner {
     border: 4px solid #f3f3f3;
-    border-top: 4px solid #3498db; /* 스피너 색상 */
+    border-top: 4px solid #3498db;
     border-radius: 50%;
     width: 30px;
     height: 30px;
-    animation: spin 1s linear infinite; /* 회전 애니메이션 */
+    animation: spin 1s linear infinite;
     margin-bottom: 10px;
 }
 
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+/* ================================
+반응형 웹 디자인
+================================ */
+@media (max-width: 768px) {
+    #top-controls { flex-direction: column; align-items: stretch; padding: 10px; }
+    .button-group { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 5px 10px; margin-top: 10px; }
+    #checkBtn, #saveCsvBtn, #file-upload-input, #load-data-btn { flex-basis: calc(50% - 5px); padding: 10px; font-size: 14px; text-align: center; }
+    #current-file-display { flex-basis: 100%; margin: 5px 0; text-align: center; }
+    #main-settings { flex-direction: column; gap: 15px; }
+    .control-section { box-shadow: none; }
+    #dynamic-filter-container { flex-direction: column; gap: 10px; }
+    .filter-control-group { flex-basis: 100%; }
+    .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    #resultTable { min-width: 600px; width: auto; }
+    #resultTable th, #resultTable td { padding: 8px 10px; font-size: 12px; }
+    .option-details { flex-direction: row; gap: 10px; }
+    .select-pair { min-width: 100%; }
+    #file-upload-controls { flex-wrap: wrap; }
+    #file-upload-controls .m_filename { flex-basis: 100%; margin-top: 8px; }
+}
+/*숨기기*/
+.filter-hidden {
+    display: none !important;
+}
+.distribution-hidden {
+    display: none !important;
+}
+.columns-hidden {
+    display: none !important;
 }
