@@ -24,10 +24,10 @@ const DEFAULT_GRADE_COLUMN_KEY = 'FINAL_GRADE';
 const DEFAULT_FILTER_COLUMNS = [
 	'COURSE_CODE','SECTION','USER_LOGIN','FINAL_SCORE','FINAL_GRADE'];
 const DEFAULT_FILTER_SUBJECT_RE = [
-	'이름', '학번', '학과', '재수강','상대평가_제외', 'FINAL_SCORE', 'FINAL_GRADE'
+	'이름', '학번', '재수강','상대평가_제외', 'FINAL_SCORE', 'FINAL_GRADE'
 ];
 const DEFAULT_FILTER_SUBJECT_AE = [
-	'이름', '학번', '학과', '재수강', 'FINAL_SCORE', 'FINAL_GRADE'
+	'이름', '학번', '재수강', 'FINAL_SCORE', 'FINAL_GRADE'
 ];
 
 // 예시: 150명 초과 시 버튼 비활성화
@@ -42,3 +42,4 @@ const RE2_CUT = {
     'A_Group': 50, // A+, A0 누적 50% 이하
 	'B_Group': 100  // B+, B0 누적 100% (제한없음)
 };
+
