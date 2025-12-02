@@ -1436,6 +1436,20 @@ excelWorker.onmessage = function(e) {
         );
     }
 };
+//---------------
+//워커 오류시 호출
+//--------------
+excelWorker.onerror = function(error) {
+    // 1. 로딩 숨김
+    hideLoading(); 
+    
+    // 2. 에러 로깅 및 사용자에게 알림
+    console.error("❌ Worker에서 치명적인 오류 발생:", error);
+    alert(`❌ Worker 오류: ${error.message}\n\n자세한 내용은 콘솔(F12)을 확인해 주세요. 파일 처리 로직에 문제가 있을 수 있습니다.`);
+
+    // 이벤트 객체에는 filename, lineno, message 속성이 포함될 수 있습니다.
+    console.error(`파일: ${error.filename}, 라인: ${error.lineno}`);
+};
 
 // =================================================================
 // 데이터 로드 버튼 이벤트 리스너(loadDataBtn) - worker.js를 사용
@@ -1456,5 +1470,6 @@ loadDataBtn.addEventListener('click', () => {
     // 메인 스레드는 즉시 해방되어 로딩 스피너가 부드럽게 돌아갑니다.
     excelWorker.postMessage({ file: file });
 });
+
 
 
