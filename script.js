@@ -12,7 +12,6 @@ const distributionDetailContainer = document.getElementById('gradeDistributionDe
 const fileInput = document.getElementById("fileInput");
 const loadDataBtn = document.getElementById("loadDataBtn");
 const fileNameDisplay = document.getElementById("fileNameDisplay");
-const saveCsvBtn = document.getElementById("saveCsvBtn");
 //토글모음
 const toggleDistributionBtn = document.getElementById('toggleDistributionBtn');
 const filterContainer = document.getElementById("dynamic-filter-container"); // 필터 컨테이너 유지
@@ -581,66 +580,7 @@ function runLimitCheck(counts, total, limits) {
         errorDetails: errorDetails // 💡 최종 결과에 포함
     };
 }
-// -----------------------------
-// CSV 저장 버튼 이벤트 리스너
-// -----------------------------
-saveCsvBtn.addEventListener("click", () => {
-    const dataToExport = errorRowsToExport;
-    const selectedColumns = [...displayColumns.querySelectorAll("input:checked")]
-           .map(cb => cb.value);
 
-    if (dataToExport.length === 0) {
-        alert("저장할 오류 데이터가 없습니다. 검증 결과에 오류가 없거나, 아직 검증을 실행하지 않았습니다.");
-        return;
-    }
-    
-    const currentCheckType = document.querySelector("input[name='checkType']:checked").value;
-
-    let finalExportColumns = [...selectedColumns];
-
-    if (currentCheckType === 'gradeCheck') {
-        finalExportColumns.push(EXPECTED_GRADE_COLUMN); 
-    }
-
-    // 2. CSV 내용 구성
-    let csv = [];
-
-    const headers = finalExportColumns.map(col => {
-        const headerName = (col === EXPECTED_GRADE_COLUMN) ? '예상 등급' : col;
-        return '"' + headerName.replace(/"/g, '""') + '"';
-    });
-    csv.push(headers.join(','));
-
-    dataToExport.forEach(row => {
-        const rowData = [];
-        finalExportColumns.forEach(col => {
-            let cellData = row[col] === null || row[col] === undefined ? "" : String(row[col]);
-            rowData.push('"' + cellData.replace(/"/g, '""') + '"');
-        });
-        csv.push(rowData.join(','));
-    });
-
-    const csvString = csv.join('\n');
-
-    // 3. 다운로드 실행
-    const blob = new Blob(["\ufeff" + csvString], { type: 'text/csv;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-
-    // (수정) subjectSelect 대신 날짜 및 고정 이름 사용
-    const now = new Date();
-    const dateString = `${now.getMonth()+1}-${now.getDate()}_${now.getHours()}${now.getMinutes()}`;
-    a.href = url;
-    a.download = `검증결과_오류내역_${dateString}.csv`; 
-
-    document.body.appendChild(a);
-    a.click();
-    
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    
-    alert(`CSV 파일 다운로드를 시작합니다: ${a.download}`);
-});
 
 // -----------------------------
 // 컬럼 목록 1회 렌더링 함수 (DocumentFragment 최적화 적용)
@@ -1382,6 +1322,7 @@ document.getElementById("saveAllCsvBtn")?.addEventListener("click", () => {
         downloadCsv(params.dataToExport, params.finalExportColumns, params.fileNamePrefix);
     }
 });
+
 
 
 
