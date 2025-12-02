@@ -1143,38 +1143,6 @@ function controlDistributionToggle(enable) {
     }
 }
 
-//
-// 복잡하거나 중복 가능성이 있는 헤더 이름을 프로그램이 처리하기 쉬운 고유한 키로 정리합니다.
-// @param {string} header - 원본 헤더 문자열
-// @returns {string | null} 정리된 키 또는 null (헤더가 유효하지 않을 경우)
-//
-function cleanHeader(header) {
-    if (!header || typeof header !== 'string') return null;
-
-    let cleaned = header.trim();
-
-    // 1. 공백 및 특수 문자 단순화
-    cleaned = cleaned
-        // 괄호와 그 안의 내용 제거 (예: "수업참여도 (10%)" -> "수업참여도")
-        .replace(/\s*\([^)]*\)/g, '') 
-        // "환산점수"를 "HWAN"으로 축약 (나중에 대문자 변환될 것임)
-        .replace(/환산점수/g, 'Hwan') 
-        // 💡 수정: 소속 뒤의 숫자를 유지합니다. (Affiliation1, Affiliation2)
-        .replace(/(소속)(\d)/g, 'Affiliation$2') 
-        // 💡 공백 및 나머지 특수문자를 언더바로 대체
-        .replace(/[^a-zA-Z0-9ㄱ-ㅎ가-힣]/g, '_') 
-        // 연속된 언더바 하나로 축소
-        .replace(/_{2,}/g, '_') 
-        // 앞뒤 언더바 제거
-        .replace(/^_|_$/g, ''); 
-    // 2. 최종 키를 대문자로 변환하여 일관성 유지
-    let finalKey = cleaned.toUpperCase();
-    // 3. 💡 고정된 키 매핑 (toUpperCase() 이후에 적용하여 영문 대문자로 강제 고정)
-    finalKey = finalKey
-        .replace('최종_점수'.toUpperCase(), 'FINAL_SCORE')
-        .replace('최종_등급'.toUpperCase(), 'FINAL_GRADE')
-    return finalKey;
-}
 /**
  * 등급 분포 자세히 보기 버튼의 활성화/비활성화 상태를 업데이트합니다.
  * (현재 필터링된 데이터의 행 개수(수강생 수)를 기준으로 판단)
@@ -1467,6 +1435,7 @@ loadDataBtn.addEventListener('click', () => {
     // 메인 스레드는 즉시 해방되어 로딩 스피너가 부드럽게 돌아갑니다.
     excelWorker.postMessage({ file: file });
 });
+
 
 
 
